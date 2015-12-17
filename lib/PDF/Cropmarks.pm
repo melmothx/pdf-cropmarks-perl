@@ -173,8 +173,23 @@ sub import_page {
         $offset_y *= 2;
     }
 
+    if (!$self->left) {
+        if ($self->twoside and !($page_number % 2)) {
+            $offset_x *= 2;
+        }
+        else {
+            $offset_x = 0;
+        }
+    }
+    elsif (!$self->right) {
+        if ($self->twoside and !($page_number % 2)) {
+            $offset_x = 0;
+        }
+        else {
+            $offset_x *= 2;
+        }
+    }
     print "Offsets are $offset_x, $offset_y\n" if DEBUG;
-
 
     my $xo = $self->out_pdf_object->importPageIntoForm($self->in_pdf_object,
                                                        $page_number);

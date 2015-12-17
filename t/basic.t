@@ -14,20 +14,37 @@ my @out;
 foreach my $paper ('a4', 'a5', 'a6', '150mm:8in', ' 15cm : 20cm ', 'letter') {
     foreach my $args (
                       {
-                       top => 1,
-                       bottom => 1,
                       },
                       {
                        top => 0,
+                       left => 0,
                        bottom => 1,
+                       right => 1,
+                       twoside => 1,
                       },
                       {
                        top => 1,
+                       left => 1,
                        bottom => 0,
+                       right => 0,
+                       twoside => 1,
+                      },
+                      {
+                       top => 0,
+                       left => 0,
+                       bottom => 1,
+                       right => 1,
+                       twoside => 0,
+                      },
+                      {
+                       top => 1,
+                       left => 1,
+                       bottom => 0,
+                       right => 0,
+                       twoside => 0,
                       }) {
-        my $papername = $paper
-          . '-bottom-' . $args->{bottom}
-          . '-top-' . $args->{top};
+        my $papername = $paper . join ('-', map { $_ => $args->{$_} }
+                                       sort keys %$args);
         $papername =~ s/\W/-/g;
         my $output = catfile('t', 'test-output-' . $papername . '.pdf');
         unlink $output if -f $output;
