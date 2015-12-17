@@ -92,12 +92,30 @@ sub paper_dimensions {
     my $self = shift;
     my $paper = $self->paper;
     my %sizes = PDF::API2::Util::getPaperSizes();
-    if (my $dimensions = %sizes{lc($self->paper)}) {
+    my %compute = (
+                   mm => sub { $_[0] / (25.4 / 72) },
+                   in => sub { $_[0] / (1 /72) },
+                   pt => sub { $_[0] / 1 },
+                   cm => sub { $_[0] / (25.4 / 72) * 10 },
+                  );
+    if (my $dimensions = $sizes{lc($self->paper)}) {
         return @$dimensions;
     }
+    elsif ($paper =~ m/\A\s*
+                       ([0-9]+(\.[0-9]+)?)
+                       (mm|in|pt|cm)
+                       \s*:\s*
+                       ([0-9]+(\.[0-9]+)?)
+                       (mm|in|pt|cm)
+                       \s*\z/sxi) {
+        my $xsize = $1;
+        my $xunit = $3;
+        my $ysize = $4;
+        my $yunit = $6;
+        return $compute{lc($xunit)}->($xsize), $compute{lc($yunit)}->($ysize);
+    }
     else {
-        warn "Cannot get dimensions from $paper, using A4";
-        return @{$sizes{a4}};
+        die "Cannot get dimensions from $paper, using A4";
     }
 }
 

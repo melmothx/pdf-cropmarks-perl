@@ -9,8 +9,12 @@ use PDF::API2;
 use PDF::Cropmarks;
 use File::Spec::Functions qw/catfile catdir/;
 
-for my $paper ('a4', 'a5', 'a6') {
-    my $output = catfile('t', 'test-output-' . $paper . '.pdf');
+my @out;
+
+for my $paper ('a4', 'a5', 'a6', '150mm:8in', ' 15cm : 20cm ', 'letter') {
+    my $papername = $paper;
+    $papername =~ s/\W/-/g;
+    my $output = catfile('t', 'test-output-' . $papername . '.pdf');
     unlink $output if -f $output;
     ok (! -f $output, "$output doesn't exists");
     my $cropper = PDF::Cropmarks->new(file => catfile(qw/t test-input.pdf/),
@@ -31,6 +35,9 @@ for my $paper ('a4', 'a5', 'a6') {
     ok($count, "Found $count pages");
     # we can't really test much without looking at the output...
     diag "Output left in $output";
+    push @out, $output;
 }
+
+diag "Output:\n" . join("\n", @out);
 done_testing;
 
