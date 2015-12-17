@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 use Moo;
-use Types::Standard qw/Str Object/;
+use Types::Standard qw/Str Object Bool/;
 use File::Copy;
 use File::Spec;
 use File::Temp;
@@ -34,6 +34,12 @@ has tmpdir => (is => 'ro',
 has in_pdf => (is => 'lazy', isa => Str);
 
 has out_pdf => (is => 'lazy', isa => Str);
+
+has top => (is => 'ro', isa => Bool, default => sub { 1 });
+has bottom => (is => 'ro', isa => Bool, default => sub { 1 });
+has left => (is => 'ro', isa => Bool, default => sub { 1 });
+has right => (is => 'ro', isa => Bool, default => sub { 1 });
+has twoside => (is => 'ro', isa => Bool, default => sub { 1 });
 
 sub _build_in_pdf {
     my $self = shift;
@@ -146,9 +152,29 @@ sub import_page {
     print "$inllx, $inlly, $inurx, $inury\n" if DEBUG;
     die "mediabox origins for input pdf should be zero" if $inllx + $inlly;
     # place the content into page
+
     my $offset_x = int(($urx - $inurx) / 2);
     my $offset_y = int(($ury - $inury) / 2);
+
+    # adjust offset if bottom or top are missing. Both missing doesn't
+    # make much sense
+    if (!$self->bottom && !$self->top) {
+        warn "bottom and top are both false, centering\n";
+    }
+    if (!$self->left && !$self->right) {
+        warn "left and right are both false, centering\n";
+    }
+
+    if (!$self->bottom) {
+        $offset_y = 0;
+    }
+    elsif (!$self->top) {
+        $offset_y *= 2;
+    }
+
     print "Offsets are $offset_x, $offset_y\n" if DEBUG;
+
+
     my $xo = $self->out_pdf_object->importPageIntoForm($self->in_pdf_object,
                                                        $page_number);
     my $gfx = $page->gfx;
