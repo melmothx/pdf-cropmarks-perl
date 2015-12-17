@@ -17,30 +17,30 @@ foreach my $paper ('a4', 'a5', 'a6', '150mm:8in', ' 15cm : 20cm ', 'letter') {
                       },
                       {
                        top => 0,
-                       left => 0,
+                       inner => 0,
                        bottom => 1,
-                       right => 1,
+                       outer => 1,
                        twoside => 1,
                       },
                       {
                        top => 1,
-                       left => 1,
+                       inner => 1,
                        bottom => 0,
-                       right => 0,
+                       outer => 0,
                        twoside => 1,
                       },
                       {
                        top => 0,
-                       left => 0,
+                       inner => 0,
                        bottom => 1,
-                       right => 1,
+                       outer => 1,
                        twoside => 0,
                       },
                       {
                        top => 1,
-                       left => 1,
+                       inner => 1,
                        bottom => 0,
-                       right => 0,
+                       outer => 0,
                        twoside => 0,
                       }) {
         my $papername = $paper . join ('-', map { $_ => $args->{$_} }

@@ -38,8 +38,8 @@ has out_pdf => (is => 'lazy', isa => Str);
 
 has top => (is => 'ro', isa => Bool, default => sub { 1 });
 has bottom => (is => 'ro', isa => Bool, default => sub { 1 });
-has left => (is => 'ro', isa => Bool, default => sub { 1 });
-has right => (is => 'ro', isa => Bool, default => sub { 1 });
+has inner => (is => 'ro', isa => Bool, default => sub { 1 });
+has outer => (is => 'ro', isa => Bool, default => sub { 1 });
 has twoside => (is => 'ro', isa => Bool, default => sub { 1 });
 
 sub _build_in_pdf {
@@ -162,8 +162,8 @@ sub import_page {
     if (!$self->bottom && !$self->top) {
         warn "bottom and top are both false, centering\n";
     }
-    if (!$self->left && !$self->right) {
-        warn "left and right are both false, centering\n";
+    if (!$self->inner && !$self->outer) {
+        warn "inner and outer are both false, centering\n";
     }
 
     if (!$self->bottom) {
@@ -173,7 +173,7 @@ sub import_page {
         $offset_y *= 2;
     }
 
-    if (!$self->left) {
+    if (!$self->inner) {
         if ($self->twoside and !($page_number % 2)) {
             $offset_x *= 2;
         }
@@ -181,7 +181,7 @@ sub import_page {
             $offset_x = 0;
         }
     }
-    elsif (!$self->right) {
+    elsif (!$self->outer) {
         if ($self->twoside and !($page_number % 2)) {
             $offset_x = 0;
         }
