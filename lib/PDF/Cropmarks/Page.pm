@@ -45,6 +45,50 @@ sub import_page {
                       $offset_x + $inurx, $offset_y + $inury);
         $line->stroke;
     }
+    my $crop = $page->gfx;
+    $crop->strokecolor('black');
+    $crop->linewidth(0.5);
+    my $crop_width = 30;
+    my $crop_offset = 8;
+    # left bottom corner
+    $crop->move($offset_x - $crop_width - $crop_offset, $offset_y);
+    $crop->line($offset_x - $crop_offset,               $offset_y);
+
+    $crop->move($offset_x, $offset_y - $crop_offset);
+    $crop->line($offset_x, $offset_y - $crop_offset - $crop_width);
+
+    # right bottom corner
+    $crop->move($offset_x + $inurx + $crop_offset, $offset_y);
+    $crop->line($offset_x + $inurx + $crop_offset + $crop_width, $offset_y);
+
+    $crop->move($offset_x + $inurx,
+                $offset_y - $crop_offset);
+    $crop->line($offset_x + $inurx,
+                $offset_y - $crop_offset - $crop_width);
+
+    # top right corner
+    $crop->move($offset_x + $inurx + $crop_offset,
+                $offset_y + $inury);
+    $crop->line($offset_x + $inurx + $crop_offset + $crop_width,
+                $offset_y + $inury);
+
+    $crop->move($offset_x + $inurx,
+                $offset_y + $inury + $crop_offset);
+    $crop->line($offset_x + $inurx,
+                $offset_y + $inury + $crop_offset + $crop_width);
+
+    # top left corner
+    $crop->move($offset_x, $offset_y + $inury + $crop_offset);
+    $crop->line($offset_x, $offset_y + $inury + $crop_offset + $crop_width);
+
+    $crop->move($offset_x - $crop_offset, $offset_y + $inury);
+    $crop->line($offset_x - $crop_offset - $crop_width, $offset_y + $inury);
+
+    # and stroke
+    $crop->stroke;
+
+
+
 }
 
 1;
