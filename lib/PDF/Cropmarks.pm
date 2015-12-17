@@ -18,6 +18,7 @@ use constant {
     DEBUG => !!$ENV{PDFC_DEBUG},
 };
 
+our $VERSION = '0.01';
 
 has file => (is => 'ro', isa => Str, required => 1);
 
