@@ -11,7 +11,6 @@ use File::Spec;
 use File::Temp;
 use PDF::API2;
 use POSIX qw();
-use PDF::Cropmarks::Page;
 use namespace::clean;
 
 use constant {
@@ -87,12 +86,9 @@ sub _build_out_pdf_object {
 sub add_cropmarks {
     my $self = shift;
     my $page = 1;
-    while ($self->in_pdf_object->openpage($page)) {
-        warn "Importing page $page\n" if DEBUG;
-        PDF::Cropmarks::Page->new(page_number => $page,
-                                  input_pdf => $self->in_pdf_object,
-                                  output_pdf => $self->out_pdf_object,
-                                 )->import_page;
+    while (my $pageobj = $self->in_pdf_object->openpage($page)) {
+        print "Importing page $page\n" if DEBUG;
+        $self->import_page($pageobj, $page);
         $page++;
     }
     $self->out_pdf_object->saveas($self->out_pdf);
@@ -102,5 +98,75 @@ sub add_cropmarks {
       or die "Cannot copy " . $self->out_pdf . ' to ' . $self->output;
     return $page;
 }
+
+sub import_page {
+    my ($self, $in_page, $page_number) = @_;
+    my $page = $self->out_pdf_object->page;
+    my ($llx, $lly, $urx, $ury) = $page->get_mediabox;
+    die "mediabox origins for output pdf should be zero" if $llx + $lly;
+    print "$llx, $lly, $urx, $ury\n" if DEBUG;
+    my ($inllx, $inlly, $inurx, $inury) = $in_page->get_mediabox;
+    print "$inllx, $inlly, $inurx, $inury\n" if DEBUG;
+    die "mediabox origins for input pdf should be zero" if $inllx + $inlly;
+    # place the content into page
+    my $offset_x = int(($urx - $inurx) / 2);
+    my $offset_y = int(($ury - $inury) / 2);
+    print "Offsets are $offset_x, $offset_y\n" if DEBUG;
+    my $xo = $self->out_pdf_object->importPageIntoForm($self->in_pdf_object,
+                                                       $page_number);
+    my $gfx = $page->gfx;
+    $gfx->formimage($xo, $offset_x, $offset_y);
+    if (DEBUG) {
+        my $line = $page->gfx;
+        $line->strokecolor('black');
+        $line->linewidth(0.5);
+        $line->rectxy($offset_x, $offset_y,
+                      $offset_x + $inurx, $offset_y + $inury);
+        $line->stroke;
+    }
+    my $crop = $page->gfx;
+    $crop->strokecolor('black');
+    $crop->linewidth(0.5);
+    my $crop_width = 30;
+    my $crop_offset = 8;
+    # left bottom corner
+    $crop->move($offset_x - $crop_width - $crop_offset, $offset_y);
+    $crop->line($offset_x - $crop_offset,               $offset_y);
+
+    $crop->move($offset_x, $offset_y - $crop_offset);
+    $crop->line($offset_x, $offset_y - $crop_offset - $crop_width);
+
+    # right bottom corner
+    $crop->move($offset_x + $inurx + $crop_offset, $offset_y);
+    $crop->line($offset_x + $inurx + $crop_offset + $crop_width, $offset_y);
+
+    $crop->move($offset_x + $inurx,
+                $offset_y - $crop_offset);
+    $crop->line($offset_x + $inurx,
+                $offset_y - $crop_offset - $crop_width);
+
+    # top right corner
+    $crop->move($offset_x + $inurx + $crop_offset,
+                $offset_y + $inury);
+    $crop->line($offset_x + $inurx + $crop_offset + $crop_width,
+                $offset_y + $inury);
+
+    $crop->move($offset_x + $inurx,
+                $offset_y + $inury + $crop_offset);
+    $crop->line($offset_x + $inurx,
+                $offset_y + $inury + $crop_offset + $crop_width);
+
+    # top left corner
+    $crop->move($offset_x, $offset_y + $inury + $crop_offset);
+    $crop->line($offset_x, $offset_y + $inury + $crop_offset + $crop_width);
+
+    $crop->move($offset_x - $crop_offset, $offset_y + $inury);
+    $crop->line($offset_x - $crop_offset - $crop_width, $offset_y + $inury);
+
+    # and stroke
+    $crop->stroke;
+}
+
+
 
 1;

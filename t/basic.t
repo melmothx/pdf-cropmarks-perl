@@ -5,6 +5,7 @@ use warnings;
 
 use Test::More;
 use Data::Dumper;
+use PDF::API2;
 use PDF::Cropmarks;
 use File::Spec::Functions qw/catfile catdir/;
 
@@ -19,6 +20,14 @@ ok $cropper->tmpdir;
 ok (-d $cropper->tmpdir, "Tmpdir exists") and diag $cropper->tmpdir;
 ok $cropper->add_cropmarks;
 ok (-f $output, "$output exists");
+
+my $pdf = PDF::API2->open($output);
+my $count = 0;
+while ($pdf->openpage($count + 1)) {
+    $count++;
+}
+ok($count, "Found $count pages");
+# we can't really test much without looking at the output...
+diag "Output left in $output";
 done_testing;
-print Dumper ($cropper);
-unlink $output unless $ENV{PDFC_DEBUG};
+
