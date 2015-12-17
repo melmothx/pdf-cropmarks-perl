@@ -37,6 +37,14 @@ sub import_page {
                                                    $self->page_number);
     my $gfx = $page->gfx;
     $gfx->formimage($xo, $offset_x, $offset_y);
+    if (DEBUG) {
+        my $line = $page->gfx;
+        $line->strokecolor('black');
+        $line->linewidth(1);
+        $line->rectxy($offset_x, $offset_y,
+                      $offset_x + $inurx, $offset_y + $inury);
+        $line->stroke;
+    }
 }
 
 1;
