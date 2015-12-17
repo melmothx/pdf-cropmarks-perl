@@ -10,6 +10,7 @@ use File::Copy;
 use File::Spec;
 use File::Temp;
 use PDF::API2;
+use PDF::API2::Util;
 use POSIX qw();
 use namespace::clean;
 
@@ -21,6 +22,8 @@ use constant {
 has file => (is => 'ro', isa => Str, required => 1);
 
 has output => (is => 'ro', isa => Str, required => 1);
+
+has paper => (is => 'ro', isa => Str, default => sub { 'a4' });
 
 has tmpdir => (is => 'ro',
                isa => Object,
@@ -74,14 +77,30 @@ sub _build_in_pdf_object {
 has out_pdf_object => (is => 'lazy', isa => Object);
 
 sub _build_out_pdf_object {
+    my $self = shift;
     my $pdf = PDF::API2->new;
     my $now = POSIX::strftime(q{%Y%m%d%H%M%S+00'00'}, localtime(time()));
     $pdf->info(Creator => 'PDF::Imposition',
                Producer => 'PDF::API2',
                CreationDate => $now,
                ModDate => $now);
+    $pdf->mediabox($self->paper_dimensions);
     return $pdf;
 }
+
+sub paper_dimensions {
+    my $self = shift;
+    my $paper = $self->paper;
+    my %sizes = PDF::API2::Util::getPaperSizes();
+    if (my $dimensions = %sizes{lc($self->paper)}) {
+        return @$dimensions;
+    }
+    else {
+        warn "Cannot get dimensions from $paper, using A4";
+        return @{$sizes{a4}};
+    }
+}
+
 
 sub add_cropmarks {
     my $self = shift;
