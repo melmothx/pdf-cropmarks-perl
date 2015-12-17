@@ -165,6 +165,32 @@ sub import_page {
 
     # and stroke
     $crop->stroke;
+
+    # then add the text
+    my $text = $page->text;
+    my $marker = sprintf('Pg %.4d', $page_number);
+    $text->font($self->out_pdf_object->corefont('Courier'), int($crop_offset - 1));
+    $text->fillcolor('black');
+
+    # bottom left
+    $text->translate($offset_x - (($crop_width + $crop_offset)),
+                     $offset_y - (($crop_width + $crop_offset)));
+    $text->text($marker);
+
+    # bottom right
+    $text->translate($inurx + $offset_x + $crop_offset,
+                     $offset_y - (($crop_width + $crop_offset)));
+    $text->text($marker);
+
+    # top left
+    $text->translate($offset_x - (($crop_width + $crop_offset)),
+                     $offset_y + $inury + $crop_width);
+    $text->text($marker);
+
+    # top right
+    $text->translate($inurx + $offset_x + $crop_offset,
+                     $offset_y + $inury + $crop_width);
+    $text->text($marker);
 }
 
 
