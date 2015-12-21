@@ -4,8 +4,9 @@ use utf8;
 use strict;
 use warnings;
 
-use FindBin;
-use lib "$FindBin::Bin/../lib";
+# use FindBin;
+# use lib "$FindBin::Bin/../lib";
+
 use Getopt::Long;
 use PDF::Cropmarks;
 use Pod::Usage;
