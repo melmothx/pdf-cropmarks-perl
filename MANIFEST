@@ -1,6 +1,7 @@
 bin/pdf-cropmarks.pl
 Changes
 lib/PDF/Cropmarks.pm
+LICENSE
 Makefile.PL
 MANIFEST			This list of files
 README
