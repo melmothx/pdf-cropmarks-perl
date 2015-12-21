@@ -21,6 +21,9 @@ foreach my $paper ('a4', 'a5', 'a6', '150mm:8in', ' 15cm : 20cm ', 'letter') {
                        bottom => 1,
                        outer => 1,
                        twoside => 1,
+                       cropmark_length => '10mm',
+                       cropmark_offset => '1mm',
+                       font_size => '10pt',
                       },
                       {
                        top => 1,
@@ -28,6 +31,9 @@ foreach my $paper ('a4', 'a5', 'a6', '150mm:8in', ' 15cm : 20cm ', 'letter') {
                        bottom => 0,
                        outer => 0,
                        twoside => 1,
+                       cropmark_length => '1cm',
+                       cropmark_offset => '8pt',
+                       font_size => '8pt',
                       },
                       {
                        top => 0,
@@ -35,6 +41,9 @@ foreach my $paper ('a4', 'a5', 'a6', '150mm:8in', ' 15cm : 20cm ', 'letter') {
                        bottom => 1,
                        outer => 1,
                        twoside => 0,
+                       cropmark_length => '1in',
+                       cropmark_offset => '1MM',
+                       font_size => '10pt',
                       },
                       {
                        top => 1,
@@ -42,6 +51,9 @@ foreach my $paper ('a4', 'a5', 'a6', '150mm:8in', ' 15cm : 20cm ', 'letter') {
                        bottom => 0,
                        outer => 0,
                        twoside => 0,
+                       cropmark_length => '0.5IN',
+                       cropmark_offset => '1MM',
+                       font_size => '10PT',
                       }) {
         my $papername = $paper . join ('-', map { $_ => $args->{$_} }
                                        sort keys %$args);

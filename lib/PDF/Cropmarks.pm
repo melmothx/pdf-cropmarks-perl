@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 use Moo;
-use Types::Standard qw/Str Object Bool/;
+use Types::Standard qw/Str Object Bool StrictNum/;
 use File::Copy;
 use File::Spec;
 use File::Temp;
@@ -116,6 +116,76 @@ false. If C<twoside> is true (default), inner margins are considered
 the left ones on an the recto pages (the odd-numbered ones). If set to
 false, the left margin is always considered the inner one.
 
+=head2 cropmark_length
+
+Default: 12mm
+
+The length of the cropmark line.
+
+=head2 cropmark_offset
+
+Default: 3mm
+
+The distance from the logical page corner and the cropmark line.
+
+=head2 font_size
+
+Default: 8pt
+
+The font size of the headers and footers with the job name, date, and
+page numbers.
+
+=cut
+
+has cropmark_length => (is => 'ro', isa => Str, default => sub { '12mm' });
+
+has cropmark_offset => (is => 'ro', isa => Str, default => sub { '3mm' });
+
+has font_size => (is => 'ro', isa => Str, default => sub { '8pt' });
+
+has cropmark_length_in_pt => (is => 'lazy', isa => StrictNum);
+has cropmark_offset_in_pt => (is => 'lazy', isa => StrictNum);
+has font_size_in_pt => (is => 'lazy', isa => StrictNum);
+
+sub _build_cropmark_length_in_pt {
+    my $self = shift;
+    return $self->_string_to_pt($self->cropmark_length);
+}
+sub _build_cropmark_offset_in_pt {
+    my $self = shift;
+    return $self->_string_to_pt($self->cropmark_offset);
+}
+
+sub _build_font_size_in_pt {
+    my $self = shift;
+    return $self->_string_to_pt($self->font_size);
+}
+
+
+sub _measure_re {
+    return qr{([0-9]+(\.[0-9]+)?)
+              (mm|in|pt|cm)}sxi;
+}
+
+sub _string_to_pt {
+    my ($self, $string) = @_;
+    my %compute = (
+                   mm => sub { $_[0] / (25.4 / 72) },
+                   in => sub { $_[0] / (1 /72) },
+                   pt => sub { $_[0] / 1 },
+                   cm => sub { $_[0] / (25.4 / 72) * 10 },
+                  );
+    my $re = $self->_measure_re;
+    if ($string =~ $re) {
+        my $size = $1;
+        my $unit = lc($3);
+        return sprintf('%.2f', $compute{$unit}->($size));
+    }
+    else {
+        die "Unparsable measure string $string";
+    }
+}
+
 =head1 METHODS
 
 =head2 add_cropmarks
@@ -217,27 +287,22 @@ sub _paper_dimensions {
     my $self = shift;
     my $paper = $self->paper;
     my %sizes = PDF::API2::Util::getPaperSizes();
-    my %compute = (
-                   mm => sub { $_[0] / (25.4 / 72) },
-                   in => sub { $_[0] / (1 /72) },
-                   pt => sub { $_[0] / 1 },
-                   cm => sub { $_[0] / (25.4 / 72) * 10 },
-                  );
+    my $measure_re = $self->_measure_re;
     if (my $dimensions = $sizes{lc($self->paper)}) {
         return @$dimensions;
     }
     elsif ($paper =~ m/\A\s*
-                       ([0-9]+(\.[0-9]+)?)
-                       (mm|in|pt|cm)
+                       $measure_re
                        \s*:\s*
-                       ([0-9]+(\.[0-9]+)?)
-                       (mm|in|pt|cm)
+                       $measure_re
                        \s*\z/sxi) {
+        # 3 + 3 captures
         my $xsize = $1;
         my $xunit = $3;
         my $ysize = $4;
         my $yunit = $6;
-        return $compute{lc($xunit)}->($xsize), $compute{lc($yunit)}->($ysize);
+        return ($self->_string_to_pt($xsize . $xunit),
+                $self->_string_to_pt($ysize . $yunit));
     }
     else {
         die "Cannot get dimensions from $paper, using A4";
@@ -329,8 +394,8 @@ sub _import_page {
     my $crop = $page->gfx;
     $crop->strokecolor('black');
     $crop->linewidth(0.5);
-    my $crop_width = 30;
-    my $crop_offset = 8;
+    my $crop_width = $self->cropmark_length_in_pt;
+    my $crop_offset = $self->cropmark_offset_in_pt;
     # left bottom corner
     $self->_draw_line($crop,
                       ($offset_x - $crop_offset,               $offset_y),
@@ -383,7 +448,8 @@ sub _import_page {
     # then add the text
     my $text = $page->text;
     my $marker = sprintf('Pg %.4d', $page_number);
-    $text->font($self->out_pdf_object->corefont('Courier'), $self->_round($crop_offset - 1));
+    $text->font($self->out_pdf_object->corefont('Courier'),
+                $self->_round($self->font_size_in_pt));
     $text->fillcolor('black');
 
     # bottom left
