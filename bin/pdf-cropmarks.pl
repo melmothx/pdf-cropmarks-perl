@@ -4,9 +4,6 @@ use utf8;
 use strict;
 use warnings;
 
-# use FindBin;
-# use lib "$FindBin::Bin/../lib";
-
 use Getopt::Long;
 use PDF::Cropmarks;
 use Pod::Usage;
@@ -79,9 +76,6 @@ if ($cropmark_offset) {
 
 my $crop = PDF::Cropmarks->new(%args);
 $crop->add_cropmarks;
-
-# print Dumper($crop);
-
 
 sub get_version {
     return "Using PDF::Cropmarks version " . $PDF::Cropmarks::VERSION . "\n";
