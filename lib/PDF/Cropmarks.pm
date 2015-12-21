@@ -332,38 +332,50 @@ sub _import_page {
     my $crop_width = 30;
     my $crop_offset = 8;
     # left bottom corner
-    $crop->move($offset_x - $crop_width - $crop_offset, $offset_y);
-    $crop->line($offset_x - $crop_offset,               $offset_y);
+    $self->_draw_line($crop,
+                      ($offset_x - $crop_offset,               $offset_y),
+                      ($offset_x - $crop_width - $crop_offset, $offset_y));
 
-    $crop->move($offset_x, $offset_y - $crop_offset);
-    $crop->line($offset_x, $offset_y - $crop_offset - $crop_width);
+
+    $self->_draw_line($crop,
+                      ($offset_x, $offset_y - $crop_offset),
+                      ($offset_x, $offset_y - $crop_offset - $crop_width));
 
     # right bottom corner
-    $crop->move($offset_x + $inurx + $crop_offset, $offset_y);
-    $crop->line($offset_x + $inurx + $crop_offset + $crop_width, $offset_y);
-
-    $crop->move($offset_x + $inurx,
-                $offset_y - $crop_offset);
-    $crop->line($offset_x + $inurx,
-                $offset_y - $crop_offset - $crop_width);
+    $self->_draw_line($crop,
+                      ($offset_x + $inurx + $crop_offset, $offset_y),
+                      ($offset_x + $inurx + $crop_offset + $crop_width,
+                       $offset_y));
+    $self->_draw_line($crop,
+                      ($offset_x + $inurx,
+                       $offset_y - $crop_offset),
+                      ($offset_x + $inurx,
+                       $offset_y - $crop_offset - $crop_width));
 
     # top right corner
-    $crop->move($offset_x + $inurx + $crop_offset,
-                $offset_y + $inury);
-    $crop->line($offset_x + $inurx + $crop_offset + $crop_width,
-                $offset_y + $inury);
+    $self->_draw_line($crop,
+                      ($offset_x + $inurx + $crop_offset,
+                       $offset_y + $inury),
+                      ($offset_x + $inurx + $crop_offset + $crop_width,
+                       $offset_y + $inury));
 
-    $crop->move($offset_x + $inurx,
-                $offset_y + $inury + $crop_offset);
-    $crop->line($offset_x + $inurx,
-                $offset_y + $inury + $crop_offset + $crop_width);
+    $self->_draw_line($crop,
+                      ($offset_x + $inurx,
+                       $offset_y + $inury + $crop_offset),
+                      ($offset_x + $inurx,
+                       $offset_y + $inury + $crop_offset + $crop_width));
 
     # top left corner
-    $crop->move($offset_x, $offset_y + $inury + $crop_offset);
-    $crop->line($offset_x, $offset_y + $inury + $crop_offset + $crop_width);
+    $self->_draw_line($crop,
+                      ($offset_x, $offset_y + $inury + $crop_offset),
+                      ($offset_x,
+                       $offset_y + $inury + $crop_offset + $crop_width));
 
-    $crop->move($offset_x - $crop_offset, $offset_y + $inury);
-    $crop->line($offset_x - $crop_offset - $crop_width, $offset_y + $inury);
+    $self->_draw_line($crop,
+                      ($offset_x - $crop_offset,
+                       $offset_y + $inury),
+                      ($offset_x - $crop_offset - $crop_width,
+                       $offset_y + $inury));
 
     # and stroke
     $crop->stroke;
@@ -410,7 +422,12 @@ sub _draw_line {
     my ($self, $gfx, $from_x, $from_y, $to_x, $to_y) = @_;
     $gfx->move($from_x, $from_y);
     $gfx->line($to_x, $to_y);
-    $gfx->circle($to_x, $to_y, 3);
+    my $radius = 3;
+    $gfx->circle($to_x, $to_y, $radius);
+    $gfx->move($to_x - $radius, $to_y);
+    $gfx->line($to_x + $radius, $to_y);
+    $gfx->move($to_x, $to_y - $radius);
+    $gfx->line($to_x, $to_y + $radius);
 }
 
 =head1 AUTHOR
