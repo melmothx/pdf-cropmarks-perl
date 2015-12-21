@@ -12,6 +12,7 @@ use File::Temp;
 use PDF::API2;
 use PDF::API2::Util;
 use POSIX qw();
+use File::Basename qw/fileparse/;
 use namespace::clean;
 
 use constant {
@@ -139,6 +140,21 @@ has _tmpdir => (is => 'ro',
 has in_pdf => (is => 'lazy', isa => Str);
 
 has out_pdf => (is => 'lazy', isa => Str);
+
+has basename => (is => 'lazy', isa => Str);
+
+has timestamp => (is => 'lazy', isa => Str);
+
+sub _build_basename {
+    my $self = shift;
+    my $basename = fileparse($self->input, qr{\.pdf}i);
+    return $basename;
+}
+
+sub _build_timestamp {
+    my $now = localtime();
+    return $now;
+}
 
 has top => (is => 'ro', isa => Bool, default => sub { 1 });
 has bottom => (is => 'ro', isa => Bool, default => sub { 1 });
@@ -377,6 +393,24 @@ sub _import_page {
     $text->translate($inurx + $offset_x + $crop_offset,
                      $offset_y + $inury + $crop_width);
     $text->text($marker);
+
+    my $text_marker = $self->basename . ' ' . $self->timestamp .
+      ' page ' . $page_number;
+    # and at the top and and the bottom add jobname + timestamp
+    $text->translate(($inurx / 2) + $offset_x,
+                     $offset_y + $inury + $crop_width);
+    $text->text_center($text_marker);
+
+    $text->translate(($inurx / 2) + $offset_x,
+                     $offset_y - ($crop_width + $crop_offset));
+    $text->text_center($text_marker);
+}
+
+sub _draw_line {
+    my ($self, $gfx, $from_x, $from_y, $to_x, $to_y) = @_;
+    $gfx->move($from_x, $from_y);
+    $gfx->line($to_x, $to_y);
+    $gfx->circle($to_x, $to_y, 3);
 }
 
 =head1 AUTHOR
