@@ -14,6 +14,7 @@ use Pod::Usage;
 my $paper = 'a4';
 my ($help, $version);
 my ($no_top, $no_bottom, $no_inner, $no_outer, $oneside) = (0,0,0,0,0);
+my ($font_size, $cropmark_length, $cropmark_offset);
 GetOptions(
            'paper=s' => \$paper,
            'no-top' => \$no_top,
@@ -21,6 +22,9 @@ GetOptions(
            'no-inner' => \$no_inner,
            'no-outer' => \$no_outer,
            'one-side' => \$oneside,
+           'font-size=s' => \$font_size,
+           'cropmark-length=s' => \$cropmark_length,
+           'cropmark-offset=s' => \$cropmark_offset,
            help => \$help,
            version => \$version,
           ) or die;
@@ -37,8 +41,8 @@ if ($version) {
 
 
 my ($input, $output) = @ARGV;
-die "Missing input file" unless $input && -f $input;
-die "Missing output file" unless $output && $output =~ m/\w/;
+die "Missing input file (try $0 --help)\n" unless $input && -f $input;
+die "Missing output file (try $0 --help)\n" unless $output && $output =~ m/\w/;
 
 if (-e $output) {
     unlink $output or die "Cannot remove $output: $!\n";
@@ -52,16 +56,31 @@ if ($no_inner && $no_outer) {
     warn "You specified no-inner and no-outer, centering instead\n";
 }
 
-my $crop = PDF::Cropmarks->new(input => $input,
-                               output => $output,
-                               paper => $paper,
-                               top => !$no_top,
-                               bottom => !$no_bottom,
-                               inner => !$no_inner,
-                               outer => !$no_outer,
-                               twoside => !$oneside,
-                              );
+my %args = (
+            input => $input,
+            output => $output,
+            paper => $paper,
+            top => !$no_top,
+            bottom => !$no_bottom,
+            inner => !$no_inner,
+            outer => !$no_outer,
+            twoside => !$oneside,
+           );
+
+if ($font_size) {
+    $args{font_size} = $font_size;
+}
+if ($cropmark_length) {
+    $args{cropmark_length} = $cropmark_length;
+}
+if ($cropmark_offset) {
+    $args{cropmark_offset} = $cropmark_offset;
+}
+
+my $crop = PDF::Cropmarks->new(%args);
 $crop->add_cropmarks;
+
+# print Dumper($crop);
 
 
 sub get_version {
@@ -117,6 +136,20 @@ Same as --no-inner, but for the outer margins.
 Affects how to consider --no-outer or --no-inner. If this flag is set,
 outer margins are always the right one, and inner are always the left
 ones.
+
+=item --cropmark-length 12mm
+
+Size of the cropmark lines. Defaults to 12mm.
+
+=item --cropmark-offset 3mm
+
+The distance from the logical page corner and the cropmark line.
+Defaults to 3mm.
+
+=item --font-size 8pt
+
+The font size of the headers and footers with the job name, date, and
+page numbers. Defaults to 8pt.
 
 =item --help
 
