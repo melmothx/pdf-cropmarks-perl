@@ -18,19 +18,123 @@ use constant {
     DEBUG => !!$ENV{PDFC_DEBUG},
 };
 
+=encoding utf8
+
+=head1 NAME
+
+PDF::Cropmarks - Add cropmarks to existing PDFs
+
+=head1 VERSION
+
+Version 0.01
+
+=head1 SYNOPSIS
+
+This module prepares PDF for printing adding the cropmarks, usually on
+a larger physical page, doing the same thing the LaTeX package "crop"
+does.
+
+It comes with a ready-made script, C<pdf-cropmarks.pl>. E.g.
+
+ $ pdf-cropmarks.pl --help # usage
+ $ pdf-cropmarks.pl --paper a3 input.pdf output.pdf
+
+To use the module in your code:
+
+  use strict;
+  use warnings;
+  use PDF::Cropmarks;
+  PDF::Cropmarks->new(input => $input,
+                      output => $output,
+                      paper => $paper,
+                      # other options here
+                     )->add_cropmarks;
+
+If everything went well (no exceptions thrown), you will find the new
+pdf in the output you provided.
+
+=cut
+
 our $VERSION = '0.01';
 
-has file => (is => 'ro', isa => Str, required => 1);
+=head1 ACCESSORS
+
+The following options need to be passed to the constructor and are
+read-only.
+
+=head2 input <file>
+
+The filename of the input. Required.
+
+=head2 output
+
+The filename of the output. Required.
+
+=head2 paper
+
+This module each logical page of the original PDF into a larger
+physical page, adding the cropmarks in the margins. With this option
+you can control the dimension of the output paper.
+
+You can specify the dimension providing a (case insensitive) string
+with the paper name (2a, 2b, 36x36, 4a, 4b, a0, a1, a2, a3, a4, a5,
+a6, b0, b1, b2, b3, b4, b5, b6, broadsheet, executive, ledger, legal,
+letter, tabloid) or a string with width and height separated by a
+column, like C<11cm:200mm>. Supported units are mm, in, pt and cm.
+
+An exception is thrown if the module is not able to parse the input
+provided.
+
+=head2 Positioning
+
+The following options control where the logical page is put on the
+physical one. They all default to true, meaning that the logical page
+is centered. Setting top and bottom to false, or inner and outer to
+false makes no sense (you achieve the same result specifing a paper
+with the same width or height) and thus ignored, resulting in a
+centering.
+
+=over 4
+
+=item top
+
+=item bottom
+
+=item inner
+
+=item outer
+
+=back
+
+=head2 twoside
+
+Boolean, defaults to true.
+
+This option affects the positioning, if inner or outer are set to
+false. If C<twoside> is true (default), inner margins are considered
+the left ones on an the recto pages (the odd-numbered ones). If set to
+false, the left margin is always considered the inner one.
+
+=head1 METHODS
+
+=head2 add_cropmarks
+
+This is the only public method: create the new pdf from C<input> and
+leave it in C<output>.
+
+=cut
+
+has input => (is => 'ro', isa => Str, required => 1);
 
 has output => (is => 'ro', isa => Str, required => 1);
 
 has paper => (is => 'ro', isa => Str, default => sub { 'a4' });
 
-has tmpdir => (is => 'ro',
-               isa => Object,
-               default => sub {
-                   return File::Temp->newdir(CLEANUP => !DEBUG);
-               });
+has _tmpdir => (is => 'ro',
+                isa => Object,
+                default => sub {
+                    return File::Temp->newdir(CLEANUP => !DEBUG);
+                });
 
 has in_pdf => (is => 'lazy', isa => Str);
 
@@ -44,16 +148,14 @@ has twoside => (is => 'ro', isa => Bool, default => sub { 1 });
 
 sub _build_in_pdf {
     my $self = shift;
-    my $name = File::Spec->catfile($self->tmpdir, 'in.pdf');
-    copy ($self->file, $name) or die "Cannot copy input to $name $!";
+    my $name = File::Spec->catfile($self->_tmpdir, 'in.pdf');
+    copy ($self->input, $name) or die "Cannot copy input to $name $!";
     return $name;
 }
 
 sub _build_out_pdf {
     my $self = shift;
-    my $name = File::Spec->catfile($self->tmpdir, 'out.pdf');
-    copy ($self->file, $name) or die "Cannot copy input to $name $!";
-    return $name;
+    return File::Spec->catfile($self->_tmpdir, 'out.pdf');
 }
 
 
@@ -67,7 +169,7 @@ sub _build_in_pdf_object {
         # same as in PDF::Imposition::Schema
         require CAM::PDF;
         my $src = CAM::PDF->new($self->in_pdf);
-        my $tmpfile_copy = File::Spec->catfile($self->tmpdir, 'v14.pdf');
+        my $tmpfile_copy = File::Spec->catfile($self->_tmpdir, 'v14.pdf');
         $src->cleansave();
         $src->output($tmpfile_copy);
         undef $src;
@@ -91,11 +193,11 @@ sub _build_out_pdf_object {
                Producer => 'PDF::API2',
                CreationDate => $now,
                ModDate => $now);
-    $pdf->mediabox($self->paper_dimensions);
+    $pdf->mediabox($self->_paper_dimensions);
     return $pdf;
 }
 
-sub paper_dimensions {
+sub _paper_dimensions {
     my $self = shift;
     my $paper = $self->paper;
     my %sizes = PDF::API2::Util::getPaperSizes();
@@ -132,7 +234,7 @@ sub add_cropmarks {
     my $page = 1;
     while (my $pageobj = $self->in_pdf_object->openpage($page)) {
         print "Importing page $page\n" if DEBUG;
-        $self->import_page($pageobj, $page);
+        $self->_import_page($pageobj, $page);
         $page++;
     }
     $self->out_pdf_object->saveas($self->out_pdf);
@@ -149,7 +251,7 @@ sub _round {
     return sprintf('%.2f', $float);
 }
 
-sub import_page {
+sub _import_page {
     my ($self, $in_page, $page_number) = @_;
     my $page = $self->out_pdf_object->page;
     my ($llx, $lly, $urx, $ury) = $page->get_mediabox;
@@ -277,6 +379,24 @@ sub import_page {
     $text->text($marker);
 }
 
+=head1 AUTHOR
+
+Marco Pessotto, C<< <melmothx at gmail.com> >>
+
+=head1 BUGS
+
+Please report any bugs or feature requests to the CPAN's RT or at
+L<https://github.com/melmothx/pdf-cropmarks-perl/issues>. If you find
+a bug, please provide a minimal example file which reproduces the
+problem.
+
+=head1 LICENSE
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of either: the GNU General Public License as
+published by the Free Software Foundation; or the Artistic License.
+
+=cut
 
 
 1;

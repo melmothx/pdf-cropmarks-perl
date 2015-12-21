@@ -49,15 +49,15 @@ foreach my $paper ('a4', 'a5', 'a6', '150mm:8in', ' 15cm : 20cm ', 'letter') {
         my $output = catfile('t', 'test-output-' . $papername . '.pdf');
         unlink $output if -f $output;
         ok (! -f $output, "$output doesn't exists");
-        my $cropper = PDF::Cropmarks->new(file => catfile(qw/t test-input.pdf/),
+        my $cropper = PDF::Cropmarks->new(input => catfile(qw/t test-input.pdf/),
                                           paper => uc($paper),
                                           output => $output,
                                           %$args,
                                          );
         ok $cropper->in_pdf_object;
         ok $cropper->out_pdf_object;
-        ok $cropper->tmpdir;
-        ok (-d $cropper->tmpdir, "Tmpdir exists") and diag $cropper->tmpdir;
+        ok $cropper->_tmpdir;
+        ok (-d $cropper->_tmpdir, "Tmpdir exists : ". $cropper->_tmpdir);
         ok $cropper->add_cropmarks;
         ok (-f $output, "$output exists");
 
@@ -68,7 +68,7 @@ foreach my $paper ('a4', 'a5', 'a6', '150mm:8in', ' 15cm : 20cm ', 'letter') {
         }
         ok($count, "Found $count pages");
         # we can't really test much without looking at the output...
-        diag "Output left in $output";
+        # diag "Output left in $output";
         push @out, $output;
     }
 }
