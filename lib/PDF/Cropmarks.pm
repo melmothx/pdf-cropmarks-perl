@@ -143,6 +143,12 @@ sub add_cropmarks {
     return $page;
 }
 
+sub _round {
+    my ($self, $float) = @_;
+    $float || 0;
+    return sprintf('%.2f', $float);
+}
+
 sub import_page {
     my ($self, $in_page, $page_number) = @_;
     my $page = $self->out_pdf_object->page;
@@ -154,26 +160,25 @@ sub import_page {
     die "mediabox origins for input pdf should be zero" if $inllx + $inlly;
     # place the content into page
 
-    my $offset_x = int(($urx - $inurx) / 2);
-    my $offset_y = int(($ury - $inury) / 2);
+    my $offset_x = $self->_round(($urx - $inurx) / 2);
+    my $offset_y = $self->_round(($ury - $inury) / 2);
 
     # adjust offset if bottom or top are missing. Both missing doesn't
     # make much sense
     if (!$self->bottom && !$self->top) {
-        warn "bottom and top are both false, centering\n";
+        # warn "bottom and top are both false, centering\n";
     }
-    if (!$self->inner && !$self->outer) {
-        warn "inner and outer are both false, centering\n";
-    }
-
-    if (!$self->bottom) {
+    elsif (!$self->bottom) {
         $offset_y = 0;
     }
     elsif (!$self->top) {
         $offset_y *= 2;
     }
 
-    if (!$self->inner) {
+    if (!$self->inner && !$self->outer) {
+        # warn "inner and outer are both false, centering\n";
+    }
+    elsif (!$self->inner) {
         if ($self->twoside and !($page_number % 2)) {
             $offset_x *= 2;
         }
@@ -248,7 +253,7 @@ sub import_page {
     # then add the text
     my $text = $page->text;
     my $marker = sprintf('Pg %.4d', $page_number);
-    $text->font($self->out_pdf_object->corefont('Courier'), int($crop_offset - 1));
+    $text->font($self->out_pdf_object->corefont('Courier'), $self->_round($crop_offset - 1));
     $text->fillcolor('black');
 
     # bottom left
