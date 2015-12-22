@@ -1,5 +1,9 @@
 Revision history for perl module PDF::Cropmarks
 
+0.02 2015-12-22
+
+ - Fixed missing dependency in Makefile
+
 0.01 2015-12-21
 
  - Initial release

@@ -20,6 +20,7 @@ WriteMakefile(
                   'PDF::API2' => 2.019,
                   'Moo' => 0,
                   'Type::Tiny' => 0,
+                  'namespace::clean' => 0,
                  },
     EXE_FILES => [ 'bin/pdf-cropmarks.pl' ],
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },

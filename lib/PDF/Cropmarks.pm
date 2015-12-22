@@ -27,7 +27,11 @@ PDF::Cropmarks - Add cropmarks to existing PDFs
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
+
+=cut
+
+our $VERSION = '0.02';
 
 =head1 SYNOPSIS
 
@@ -53,10 +57,6 @@ To use the module in your code:
 
 If everything went well (no exceptions thrown), you will find the new
 pdf in the output you provided.
-
-=cut
-
-our $VERSION = '0.01';
 
 =head1 ACCESSORS
 
