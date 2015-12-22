@@ -1,5 +1,12 @@
 Revision history for perl module PDF::Cropmarks
 
+0.03 2015-12-22
+
+ - New option: signature
+ - New option: paper_thickness
+
+With these options you can tweak the correction for the trimming.
+
 0.02 2015-12-22
 
  - Fixed missing dependency in Makefile
