@@ -479,6 +479,21 @@ sub _import_page {
             $offset_x *= 2;
         }
     }
+
+    if ($self->signature && $self->twoside) {
+        my $paper_thickness = $self->thickness_page_offsets->{$page_number};
+        die "$page_number not defined in " . Dumper($self->thickness_page_offsets)
+          unless defined $paper_thickness;
+        # recto pages, increase
+        if ($page_number % 2) {
+            $offset_x += $paper_thickness;
+        }
+        # verso pages, decrease
+        else {
+            $offset_x -= $paper_thickness;
+        }
+    }
+
     print "Offsets are $offset_x, $offset_y\n" if DEBUG;
 
     my $xo = $self->out_pdf_object->importPageIntoForm($self->in_pdf_object,

@@ -24,6 +24,8 @@ foreach my $paper ('a4', 'a5', 'a6', '150mm:8in', ' 15cm : 20cm ', 'letter') {
                        cropmark_length => '10mm',
                        cropmark_offset => '1mm',
                        font_size => '10pt',
+                       signature => 1,
+                       paper_thickness => '1mm',
                       },
                       {
                        top => 1,
@@ -34,6 +36,7 @@ foreach my $paper ('a4', 'a5', 'a6', '150mm:8in', ' 15cm : 20cm ', 'letter') {
                        cropmark_length => '1cm',
                        cropmark_offset => '8pt',
                        font_size => '8pt',
+                       signature => 16,
                       },
                       {
                        top => 0,
@@ -44,6 +47,7 @@ foreach my $paper ('a4', 'a5', 'a6', '150mm:8in', ' 15cm : 20cm ', 'letter') {
                        cropmark_length => '1in',
                        cropmark_offset => '1MM',
                        font_size => '10pt',
+                       signature => 4,
                       },
                       {
                        top => 1,

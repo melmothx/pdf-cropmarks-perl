@@ -4,11 +4,13 @@ use strict;
 use warnings;
 use File::Spec::Functions qw/catfile/;
 use PDF::Cropmarks;
+use PDF::Imposition;
 use Data::Dumper;
 use Test::More tests => 11;
 
 my $input = catfile(qw/t test-input.pdf/);
 my $output = catfile(qw/t test-output-thickness.pdf/);
+my $impout = catfile(qw/t test-output-thickness-imposed.pdf/);
 
 {
     my $cropper = PDF::Cropmarks->new(input => $input,
@@ -104,9 +106,11 @@ foreach my $signature (1, 12) {
 
 {
     my $cropper = PDF::Cropmarks->new(input => $input,
-                                  paper => 'a4',
-                                  signature => 16,
-                                  output => $output);
+                                      paper => 'a4',
+                                      inner => 0,
+                                      signature => 16,
+                                      paper_thickness => '3cm',
+                                      output => $output);
 
     ok ($cropper->paper_thickness_in_pt, "Thickness ok");
     is ($cropper->total_input_pages, 12, "Pages in ok");
@@ -136,7 +140,10 @@ foreach my $signature (1, 12) {
     is_deeply($cropper->thickness_page_offsets, \%thicks, "Mapping ok")
       or diag Dumper($cropper->thickness_page_offsets) . " vs " . Dumper(\%thicks);
     $cropper->add_cropmarks;
-    unless ($ENV{PDFC_DEBUG}) {
-        unlink $output or die "Couldn't unlink $output $!";
-    }
+    my $imposer = PDF::Imposition->new(file => $output,
+                                       outfile => $impout,
+                                       signature => 16,
+                                       schema => '2up');
+    $imposer->impose;
+    diag "Output left in " . $imposer->outfile;
 }
