@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 use Moo;
-use Types::Standard qw/Str Object Bool StrictNum Int HashRef/;
+use Types::Standard qw/Str Object Bool StrictNum Int HashRef ArrayRef/;
 use File::Copy;
 use File::Spec;
 use File::Temp;
@@ -421,10 +421,9 @@ sub _paper_dimensions {
 sub add_cropmarks {
     my $self = shift;
     my $page = 1;
-    while (my $pageobj = $self->in_pdf_object->openpage($page)) {
+    foreach my $page (1 .. $self->total_output_pages) {
         print "Importing page $page\n" if DEBUG;
-        $self->_import_page($pageobj, $page);
-        $page++;
+        $self->_import_page($page);
     }
     $self->out_pdf_object->saveas($self->out_pdf);
     $self->in_pdf_object->end;
@@ -440,13 +439,23 @@ sub _round {
     return sprintf('%.3f', $float);
 }
 
+has output_dimensions => (is => 'lazy', isa => ArrayRef);
+
+sub _build_output_dimensions {
+    my $self = shift;
+    # get the first page
+    my $in_page = $self->in_pdf_object->openpage(1);
+    return [ $in_page->get_mediabox ];
+}
+
 sub _import_page {
-    my ($self, $in_page, $page_number) = @_;
+    my ($self, $page_number) = @_;
+    my $in_page = $self->in_pdf_object->openpage($page_number);
     my $page = $self->out_pdf_object->page;
     my ($llx, $lly, $urx, $ury) = $page->get_mediabox;
     die "mediabox origins for output pdf should be zero" if $llx + $lly;
     print "$llx, $lly, $urx, $ury\n" if DEBUG;
-    my ($inllx, $inlly, $inurx, $inury) = $in_page->get_mediabox;
+    my ($inllx, $inlly, $inurx, $inury) = ($in_page ? $in_page->get_mediabox : @{$self->output_dimensions});
     print "$inllx, $inlly, $inurx, $inury\n" if DEBUG;
     die "mediabox origins for input pdf should be zero" if $inllx + $inlly;
     # place the content into page
@@ -501,11 +510,12 @@ sub _import_page {
     }
 
     print "Offsets are $offset_x, $offset_y\n" if DEBUG;
-
-    my $xo = $self->out_pdf_object->importPageIntoForm($self->in_pdf_object,
-                                                       $page_number);
-    my $gfx = $page->gfx;
-    $gfx->formimage($xo, $offset_x, $offset_y);
+    if ($in_page) {
+        my $xo = $self->out_pdf_object->importPageIntoForm($self->in_pdf_object,
+                                                           $page_number);
+        my $gfx = $page->gfx;
+        $gfx->formimage($xo, $offset_x, $offset_y);
+    }
     if (DEBUG) {
         my $line = $page->gfx;
         $line->strokecolor('black');
