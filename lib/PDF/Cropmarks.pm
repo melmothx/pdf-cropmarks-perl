@@ -345,7 +345,7 @@ has bottom => (is => 'ro', isa => Bool, default => sub { 1 });
 has inner => (is => 'ro', isa => Bool, default => sub { 1 });
 has outer => (is => 'ro', isa => Bool, default => sub { 1 });
 has twoside => (is => 'ro', isa => Bool, default => sub { 1 });
-
+has _is_closed => (is => 'rw', isa => Bool, default => sub { 0 });
 sub _build_in_pdf {
     my $self = shift;
     my $name = File::Spec->catfile($self->_tmpdir, 'in.pdf');
@@ -423,9 +423,9 @@ sub _paper_dimensions {
     }
 }
 
-
 sub add_cropmarks {
     my $self = shift;
+    die "add_cropmarks already called!" if $self->_is_closed;
     my $page = 1;
     foreach my $page (1 .. $self->total_output_pages) {
         print "Importing page $page\n" if DEBUG;
@@ -436,6 +436,7 @@ sub add_cropmarks {
     $self->out_pdf_object->end;
     move($self->out_pdf, $self->output)
       or die "Cannot copy " . $self->out_pdf . ' to ' . $self->output;
+    $self->_is_closed(1);
     return $page;
 }
 
@@ -636,6 +637,14 @@ sub _draw_line {
     $gfx->line($to_x + $radius, $to_y);
     $gfx->move($to_x, $to_y - $radius);
     $gfx->line($to_x, $to_y + $radius);
+}
+
+sub DESTROY {
+    my $self = shift;
+    unless ($self->_is_closed) {
+        $self->in_pdf_object->end;
+        $self->out_pdf_object->end;
+    }
 }
 
 =head1 AUTHOR
