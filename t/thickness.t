@@ -43,7 +43,7 @@ my $impout = catfile(qw/t test-output-thickness-imposed.pdf/);
                                   signature => 4,
                                   output => $output);
     my %thicks = map { $_ => "0.000" } 1..12;
-    is_deeply($cropper->thickness_page_offsets, \%thicks, "mapping ok for sig 4")
+    off_is_deeply($cropper->thickness_page_offsets, \%thicks, "mapping ok for sig 4")
       or diag Dumper($cropper->thickness_page_offsets) . " vs " . Dumper(\%thicks);
 }
 
@@ -72,7 +72,7 @@ my $impout = catfile(qw/t test-output-thickness-imposed.pdf/);
                   15 => $thin,
                   16 => $thin,
                  );
-    is_deeply($cropper->thickness_page_offsets, \%thicks, "map ok for sig 8")
+    off_is_deeply($cropper->thickness_page_offsets, \%thicks, "map ok for sig 8")
       or diag Dumper($cropper->thickness_page_offsets) . " vs " . Dumper(\%thicks);
 }
 
@@ -98,7 +98,7 @@ foreach my $signature (1, 12) {
                   11 => $thin * 2,
                   12 => $thin * 2,
                  );
-    is_deeply($cropper->thickness_page_offsets, \%thicks, "map ok for sig 8")
+    off_is_deeply($cropper->thickness_page_offsets, \%thicks, "map ok for sig 8")
       or diag Dumper($cropper->thickness_page_offsets) . " vs " . Dumper(\%thicks);
 }
 
@@ -137,7 +137,7 @@ foreach my $signature (1, 12) {
                   16 => $thin * 3,
                  );
 
-    is_deeply($cropper->thickness_page_offsets, \%thicks, "Mapping ok")
+    off_is_deeply($cropper->thickness_page_offsets, \%thicks, "Mapping ok")
       or diag Dumper($cropper->thickness_page_offsets) . " vs " . Dumper(\%thicks);
     $cropper->add_cropmarks;
     my $imposer = PDF::Imposition->new(file => $output,
@@ -146,4 +146,10 @@ foreach my $signature (1, 12) {
                                        schema => '2up');
     $imposer->impose;
     diag "Output left in " . $imposer->outfile;
+}
+
+sub off_is_deeply {
+    my ($got, $expected, $msg) = @_;
+    my %offsets  = map { $_ => $got->{$_}->{offset} } keys %$got;
+    is_deeply(\%offsets, $expected, $msg);
 }

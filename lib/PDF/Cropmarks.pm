@@ -188,7 +188,7 @@ sub _build_font_size_in_pt {
     return $self->_string_to_pt($self->font_size);
 }
 
-has thickness_page_offsets => (is => 'lazy', isa => HashRef[StrictNum]);
+has thickness_page_offsets => (is => 'lazy', isa => HashRef[HashRef]);
 
 sub _build_thickness_page_offsets {
     my $self = shift;
@@ -203,12 +203,14 @@ sub _build_thickness_page_offsets {
         my $half = $signature / 2;
         my $offset = $self->paper_thickness_in_pt * ($half / 2);
         my $original_offset = $self->paper_thickness_in_pt * ($half / 2);
+        my $signature_number = 0;
         foreach my $page (1 .. $total_pages) {
             my $page_in_sig = $page % $signature || $signature;
             if ($page_in_sig == 1) {
                 $offset = $original_offset;
+                $signature_number++;
             }
-            print "page in sig: $page_in_sig\n" if DEBUG;
+            print "page in sig / $signature_number : $page_in_sig\n" if DEBUG;
             # odd pages triggers a stepping
             if ($page_in_sig % 2) {
                 if ($page_in_sig > ($half + 1)) {
@@ -220,7 +222,11 @@ sub _build_thickness_page_offsets {
             }
             my $rounded = $self->_round($offset);
             print "offset for page is $rounded\n" if DEBUG;
-            $out{$page} = $rounded;
+            $out{$page} = {
+                           offset => $rounded,
+                           signature => $signature_number,
+                           signature_page => $page_in_sig,
+                          };
         }
     }
     return \%out;
@@ -495,8 +501,10 @@ sub _import_page {
         }
     }
 
+    my $signature_mark = '';
     if ($self->signature && $self->twoside) {
-        my $paper_thickness = $self->thickness_page_offsets->{$page_number};
+        my $spec = $self->thickness_page_offsets->{$page_number};
+        my $paper_thickness = $spec->{offset};
         die "$page_number not defined in " . Dumper($self->thickness_page_offsets)
           unless defined $paper_thickness;
         # recto pages, increase
@@ -507,6 +515,7 @@ sub _import_page {
         else {
             $offset_x -= $paper_thickness;
         }
+        $signature_mark = ' #' . $spec->{signature} . '/' . $spec->{signature_page};
     }
 
     print "Offsets are $offset_x, $offset_y\n" if DEBUG;
@@ -606,7 +615,7 @@ sub _import_page {
     $text->text($marker);
 
     my $text_marker = $self->basename . ' ' . $self->timestamp .
-      ' page ' . $page_number;
+      ' page ' . $page_number . $signature_mark;
     # and at the top and and the bottom add jobname + timestamp
     $text->translate(($inurx / 2) + $offset_x,
                      $offset_y + $inury + $crop_width);
