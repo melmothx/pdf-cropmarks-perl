@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 use Moo;
-use Types::Standard qw/Str Object Bool StrictNum/;
+use Types::Standard qw/Str Object Bool StrictNum Int HashRef/;
 use File::Copy;
 use File::Spec;
 use File::Temp;
@@ -135,6 +135,18 @@ Default: 8pt
 The font size of the headers and footers with the job name, date, and
 page numbers.
 
+=head2 signature
+
+Default to 0, meaning that no signature is needed. If set to 1, means
+that all the pages should fit in a single signature, otherwise it
+should be a multiple of 4.
+
+=head2 paper_thickness
+
+When passing the signature option, the logical pages are shifted on
+the x axys by this amount to compensate the paper folding. Accept a
+measure.
+
 =cut
 
 has cropmark_length => (is => 'ro', isa => Str, default => sub { '12mm' });
@@ -146,6 +158,15 @@ has font_size => (is => 'ro', isa => Str, default => sub { '8pt' });
 has cropmark_length_in_pt => (is => 'lazy', isa => StrictNum);
 has cropmark_offset_in_pt => (is => 'lazy', isa => StrictNum);
 has font_size_in_pt => (is => 'lazy', isa => StrictNum);
+
+has signature => (is => 'rwp', isa => Int, default => sub { 0 });
+has paper_thickness => (is => 'ro', isa => Str, default => sub { '0.1mm' });
+has paper_thickness_in_pt => (is => 'lazy', isa => StrictNum);
+
+sub _build_paper_thickness_in_pt {
+    my $self = shift;
+    return $self->_string_to_pt($self->paper_thickness);
+}
 
 sub _build_cropmark_length_in_pt {
     my $self = shift;
@@ -161,9 +182,90 @@ sub _build_font_size_in_pt {
     return $self->_string_to_pt($self->font_size);
 }
 
+has thickness_page_offsets => (is => 'lazy', isa => HashRef[StrictNum]);
+
+sub _build_thickness_page_offsets {
+    my $self = shift;
+    my $total_pages = $self->total_output_pages;
+    my %out = map { $_ => 0 } (1 .. $total_pages);
+    if (my $signature = $self->signature) {
+        # convert to the real signature
+        if ($signature == 1) {
+            $signature = $total_pages;
+        }
+        die "Should have already died, signature not a multiple of four" if $signature % 4;
+        my $half = $signature / 2;
+        my $offset = $self->paper_thickness_in_pt * ($half / 2);
+        my $original_offset = $self->paper_thickness_in_pt * ($half / 2);
+        foreach my $page (1 .. $total_pages) {
+            my $page_in_sig = $page % $signature || $signature;
+            if ($page_in_sig == 1) {
+                $offset = $original_offset;
+            }
+            print "page in sig: $page_in_sig\n" if DEBUG;
+            # odd pages triggers a stepping
+            if ($page_in_sig % 2) {
+                if ($page_in_sig > ($half + 1)) {
+                    $offset += $self->paper_thickness_in_pt;
+                }
+                elsif ($page_in_sig < $half) {
+                    $offset -= $self->paper_thickness_in_pt;
+                }
+            }
+            my $rounded = $self->_round($offset);
+            print "offset for page is $rounded\n" if DEBUG;
+            $out{$page} = $rounded;
+        }
+    }
+    return \%out;
+}
+
+has total_input_pages => (is => 'lazy', isa => Int);
+
+sub _build_total_input_pages {
+    my $self = shift;
+    my $count = 0;
+    while ($self->in_pdf_object->openpage($count + 1)) {
+        $count++;
+    }
+    return $count;
+}
+
+has total_output_pages => (is => 'lazy', isa => Int);
+
+sub _build_total_output_pages {
+    my $self = shift;
+    my $total_input_pages = $self->total_input_pages;
+
+    if (my $signature = $self->signature) {
+        if ($signature == 1) {
+            # all the pages on a single signature
+            # round to the next multiple of 4
+            my $missing = 0;
+            if (my $modulo = $total_input_pages % 4) {
+                $missing = 4 - $modulo;
+            }
+            return $total_input_pages + $missing;
+        }
+        elsif ($signature % 4) {
+            die "Signature must be 1 or a multiple of 4\n";
+        }
+        else {
+            my $missing = 0;
+            if (my $modulo = $total_input_pages % $signature) {
+                $missing = $signature - $modulo;
+            }
+            return $total_input_pages + $missing;
+        }
+    }
+    else {
+        return $total_input_pages;
+    }
+}
+
 
 sub _measure_re {
-    return qr{([0-9]+(\.[0-9]+)?)
+    return qr{([0-9]+(\.[0-9]+)?)\s*
               (mm|in|pt|cm)}sxi;
 }
 
@@ -171,7 +273,7 @@ sub _string_to_pt {
     my ($self, $string) = @_;
     my %compute = (
                    mm => sub { $_[0] / (25.4 / 72) },
-                   in => sub { $_[0] / (1 /72) },
+                   in => sub { $_[0] / (1 / 72) },
                    pt => sub { $_[0] / 1 },
                    cm => sub { $_[0] / (25.4 / 72) * 10 },
                   );
@@ -179,7 +281,7 @@ sub _string_to_pt {
     if ($string =~ $re) {
         my $size = $1;
         my $unit = lc($3);
-        return sprintf('%.2f', $compute{$unit}->($size));
+        return $self->_round($compute{$unit}->($size));
     }
     else {
         die "Unparsable measure string $string";
@@ -329,7 +431,7 @@ sub add_cropmarks {
 sub _round {
     my ($self, $float) = @_;
     $float || 0;
-    return sprintf('%.2f', $float);
+    return sprintf('%.3f', $float);
 }
 
 sub _import_page {
