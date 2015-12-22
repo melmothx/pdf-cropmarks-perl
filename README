@@ -2,9 +2,10 @@ PDF-Cropmarks
 
 This module prepares PDF for printing adding the cropmarks, usually on
 a larger physical page, doing the same thing the LaTeX package "crop"
-does.
+does. It also takes care of the paper thickness, shifting the logical
+pages to compensate the folding.
 
-A script pdf-cropmarks.pl is also provided.
+It comes with a ready-made script, pdf-cropmarks.pl
 
 INSTALLATION
 

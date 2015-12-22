@@ -37,7 +37,8 @@ our $VERSION = '0.02';
 
 This module prepares PDF for printing adding the cropmarks, usually on
 a larger physical page, doing the same thing the LaTeX package "crop"
-does.
+does. It also takes care of the paper thickness, shifting the logical
+pages to compensate the folding.
 
 It comes with a ready-made script, C<pdf-cropmarks.pl>. E.g.
 
