@@ -147,6 +147,11 @@ When passing the signature option, the logical pages are shifted on
 the x axys by this amount to compensate the paper folding. Accept a
 measure.
 
+This option is active only when the signature is set (default to
+false) and twoside is true (the default). Default to 0.1mm, which is
+appropriate for the common paper 80g/m2. You can do the math measuring
+a stack height and dividing by the number of sheets.
+
 =cut
 
 has cropmark_length => (is => 'ro', isa => Str, default => sub { '12mm' });
