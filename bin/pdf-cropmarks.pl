@@ -11,7 +11,7 @@ use Pod::Usage;
 my $paper = 'a4';
 my ($help, $version);
 my ($no_top, $no_bottom, $no_inner, $no_outer, $oneside) = (0,0,0,0,0);
-my ($font_size, $cropmark_length, $cropmark_offset);
+my ($font_size, $cropmark_length, $cropmark_offset, $paper_thickness, $signature);
 GetOptions(
            'paper=s' => \$paper,
            'no-top' => \$no_top,
@@ -24,6 +24,8 @@ GetOptions(
            'cropmark-offset=s' => \$cropmark_offset,
            help => \$help,
            version => \$version,
+           'signature=i' => \$signature,
+           'paper-thickness=s' => \$paper_thickness,
           ) or die;
 
 if ($help) {
@@ -72,6 +74,12 @@ if ($cropmark_length) {
 }
 if ($cropmark_offset) {
     $args{cropmark_offset} = $cropmark_offset;
+}
+if ($paper_thickness) {
+    $args{paper_thickness} = $paper_thickness;
+}
+if ($signature) {
+    $args{signature} = $signature;
 }
 
 my $crop = PDF::Cropmarks->new(%args);
@@ -144,6 +152,21 @@ Defaults to 3mm.
 
 The font size of the headers and footers with the job name, date, and
 page numbers. Defaults to 8pt.
+
+=item --signature <int>
+
+If set to 1, means that all the pages should fit in a single
+signature, otherwise it should be a multiple of 4. By default no
+signature is computed. Ignored if --one-side is passed. This is needed
+if you want to take account of the paper thickness for the cutting
+correction.
+
+=item --paper-thickness <measure>
+
+This option is active only when the signature is active. Default to
+0.1mm, which is appropriate for the common paper 80g/m2. You can do
+the math measuring a stack height and dividing by the number of
+sheets.
 
 =item --help
 
