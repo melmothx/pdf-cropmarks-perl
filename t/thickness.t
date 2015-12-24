@@ -4,9 +4,14 @@ use strict;
 use warnings;
 use File::Spec::Functions qw/catfile/;
 use PDF::Cropmarks;
-use PDF::Imposition;
 use Data::Dumper;
 use Test::More tests => 11;
+
+my $impose = 1;
+eval { require PDF::Imposition };
+if ($@) {
+    $impose = 0;
+}
 
 my $input = catfile(qw/t test-input.pdf/);
 my $output = catfile(qw/t test-output-thickness.pdf/);
@@ -140,12 +145,14 @@ foreach my $signature (1, 12) {
     off_is_deeply($cropper->thickness_page_offsets, \%thicks, "Mapping ok")
       or diag Dumper($cropper->thickness_page_offsets) . " vs " . Dumper(\%thicks);
     $cropper->add_cropmarks;
-    my $imposer = PDF::Imposition->new(file => $output,
-                                       outfile => $impout,
-                                       signature => 16,
-                                       schema => '2up');
-    $imposer->impose;
-    diag "Output left in " . $imposer->outfile;
+    if ($impose) {
+        my $imposer = PDF::Imposition->new(file => $output,
+                                           outfile => $impout,
+                                           signature => 16,
+                                           schema => '2up');
+        $imposer->impose;
+        diag "Output left in " . $imposer->outfile;
+    }
 }
 
 sub off_is_deeply {

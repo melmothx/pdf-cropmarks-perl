@@ -14,7 +14,6 @@ WriteMakefile(
     },
     BUILD_REQUIRES => {
                        'Test::More' => 0,
-                       'PDF::Imposition' => 0.15,
     },
     PREREQ_PM => {
                   'CAM::PDF' => 1.58,
