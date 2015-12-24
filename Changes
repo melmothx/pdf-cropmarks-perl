@@ -1,5 +1,11 @@
 Revision history for perl module PDF::Cropmarks
 
+0.04 2015-12-24
+
+ - Fixed rounding of 0 (or equivalent) RT#110566
+ - Do not require 5.10.1
+ - Do not require PDF::Imposition
+
 0.03 2015-12-22
 
  - New option: signature
