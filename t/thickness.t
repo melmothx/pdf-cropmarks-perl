@@ -47,7 +47,7 @@ my $impout = catfile(qw/t test-output-thickness-imposed.pdf/);
                                   paper => 'a4',
                                   signature => 4,
                                   output => $output);
-    my %thicks = map { $_ => "0.000" } 1..12;
+    my %thicks = map { $_ => 0 } 1..12;
     off_is_deeply($cropper->thickness_page_offsets, \%thicks, "mapping ok for sig 4")
       or diag Dumper($cropper->thickness_page_offsets) . " vs " . Dumper(\%thicks);
 }
@@ -62,18 +62,18 @@ my $impout = catfile(qw/t test-output-thickness-imposed.pdf/);
     my %thicks = (
                   1 => $thin,
                   2 => $thin,
-                  3 => '0.000',
-                  4 => '0.000',
-                  5 => '0.000',
-                  6 => '0.000',
+                  3 => 0,
+                  4 => 0,
+                  5 => 0,
+                  6 => 0,
                   7 => $thin,
                   8 => $thin,
                   9 => $thin,
                   10 => $thin,
-                  11 => '0.000',
-                  12 => '0.000',
-                  13 => '0.000',
-                  14 => '0.000',
+                  11 => 0,
+                  12 => 0,
+                  13 => 0,
+                  14 => 0,
                   15 => $thin,
                   16 => $thin,
                  );
@@ -94,10 +94,10 @@ foreach my $signature (1, 12) {
                   2 => $thin * 2,
                   3 => $thin,
                   4 => $thin,
-                  5 => '0.000',
-                  6 => '0.000',
-                  7 => '0.000',
-                  8 => '0.000',
+                  5 => 0,
+                  6 => 0,
+                  7 => 0,
+                  8 => 0,
                   9 => $thin,
                   10 => $thin,
                   11 => $thin * 2,

@@ -442,7 +442,11 @@ sub add_cropmarks {
 
 sub _round {
     my ($self, $float) = @_;
-    $float || 0;
+    print "Rounding $float\n" if DEBUG;
+    return 0 unless $float;
+    if ($float < 0.001 && $float > -0.001) {
+        return 0;
+    }
     return sprintf('%.3f', $float);
 }
 
