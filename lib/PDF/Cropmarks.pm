@@ -260,7 +260,7 @@ sub _build_total_output_pages {
             return $total_input_pages + $missing;
         }
         elsif ($signature % 4) {
-            die "Signature must be 1 or a multiple of 4\n";
+            die "Signature must be 1 or a multiple of 4, but I got $signature";
         }
         else {
             my $missing = 0;
