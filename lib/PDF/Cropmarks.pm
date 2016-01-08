@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 use Moo;
-use Types::Standard qw/Str Object Bool StrictNum Int HashRef ArrayRef/;
+use Types::Standard qw/Maybe Str Object Bool StrictNum Int HashRef ArrayRef/;
 use File::Copy;
 use File::Spec;
 use File::Temp;
@@ -152,6 +152,11 @@ This option is active only when the signature is set (default to
 false) and twoside is true (the default). Default to 0.1mm, which is
 appropriate for the common paper 80g/m2. You can do the math measuring
 a stack height and dividing by the number of sheets.
+
+=head2 title
+
+The (optional) job title to put on the markers. It defaults to the
+file basename.
 
 =cut
 
@@ -389,8 +394,9 @@ sub _build_out_pdf_object {
     my $self = shift;
     my $pdf = PDF::API2->new;
     my $now = POSIX::strftime(q{%Y%m%d%H%M%S+00'00'}, localtime(time()));
-    $pdf->info(Creator => 'PDF::Imposition',
+    $pdf->info(Creator => 'PDF::Cropmarks',
                Producer => 'PDF::API2',
+               Title => $self->title || $self->basename,
                CreationDate => $now,
                ModDate => $now);
     $pdf->mediabox($self->_paper_dimensions);
@@ -451,6 +457,8 @@ sub _round {
 }
 
 has output_dimensions => (is => 'lazy', isa => ArrayRef);
+
+has title => (is => 'ro', isa => Maybe[Str]);
 
 sub _build_output_dimensions {
     my $self = shift;
@@ -619,7 +627,8 @@ sub _import_page {
                      $offset_y + $inury + $crop_width);
     $text->text($marker);
 
-    my $text_marker = $self->basename . ' ' . $self->timestamp .
+    my $text_marker = ($self->title || $self->basename)
+      . ' ' . $self->timestamp .
       ' page ' . $page_number . $signature_mark;
     # and at the top and and the bottom add jobname + timestamp
     $text->translate(($inurx / 2) + $offset_x,

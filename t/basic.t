@@ -3,7 +3,7 @@ use utf8;
 use strict;
 use warnings;
 
-use Test::More;
+use Test::More tests => 288;
 use Data::Dumper;
 use PDF::API2;
 use PDF::Cropmarks;
@@ -14,6 +14,9 @@ my @out;
 foreach my $paper ('a4', 'a5', 'a6', '150mm:8in', ' 15cm : 20cm ', 'letter') {
     foreach my $args (
                       {
+                      },
+                      {
+                       title => "Title paper is $paper",
                       },
                       {
                        top => 0,
@@ -89,6 +92,14 @@ foreach my $paper ('a4', 'a5', 'a6', '150mm:8in', ' 15cm : 20cm ', 'letter') {
     }
 }
 
-diag "Output:\n" . join("\n", @out);
-done_testing;
+
+if ($ENV{AMW_DEBUG}) {
+    diag "Output:\n" . join("\n", @out);
+}
+else {
+    foreach my $file (@out) {
+        unlink $file or die "Cannot remove $file $!";
+    }
+}
+
 
