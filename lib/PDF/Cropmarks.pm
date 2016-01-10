@@ -241,10 +241,7 @@ has total_input_pages => (is => 'lazy', isa => Int);
 
 sub _build_total_input_pages {
     my $self = shift;
-    my $count = 0;
-    while ($self->in_pdf_object->openpage($count + 1)) {
-        $count++;
-    }
+    my $count = $self->in_pdf_object->pages;
     return $count;
 }
 

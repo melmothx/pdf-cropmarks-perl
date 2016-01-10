@@ -81,10 +81,7 @@ foreach my $paper ('a4', 'a5', 'a6', '150mm:8in', ' 15cm : 20cm ', 'letter') {
         ok (-f $output, "$output exists");
 
         my $pdf = PDF::API2->open($output);
-        my $count = 0;
-        while ($pdf->openpage($count + 1)) {
-            $count++;
-        }
+        my $count = $pdf->pages;
         ok($count, "Found $count pages");
         # we can't really test much without looking at the output...
         # diag "Output left in $output";
