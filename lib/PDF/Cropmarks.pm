@@ -14,9 +14,9 @@ use PDF::API2::Util;
 use POSIX qw();
 use File::Basename qw/fileparse/;
 use namespace::clean;
-
+use Data::Dumper;
 use constant {
-    DEBUG => !!$ENV{PDFC_DEBUG},
+    DEBUG => !!$ENV{AMW_DEBUG},
 };
 
 =encoding utf8
@@ -158,6 +158,16 @@ a stack height and dividing by the number of sheets.
 The (optional) job title to put on the markers. It defaults to the
 file basename.
 
+=head2 cover
+
+Relevant if signature is passed. Usually the last signature is filled
+with blank pages until it's full. With this option turned on, the last
+page of the document is moved to the end of the stack. If you have 13
+pages, and a signature of 4, you will end up with 16 pages with
+cropmarks, and the last three empty. With this option you will have
+page 16 with the logical page 13 on it, while the pages 13-14-15 will
+be empty (but with cropmarks nevertheless).
+
 =cut
 
 has cropmark_length => (is => 'ro', isa => Str, default => sub { '12mm' });
@@ -173,6 +183,7 @@ has font_size_in_pt => (is => 'lazy', isa => StrictNum);
 has signature => (is => 'rwp', isa => Int, default => sub { 0 });
 has paper_thickness => (is => 'ro', isa => Str, default => sub { '0.1mm' });
 has paper_thickness_in_pt => (is => 'lazy', isa => StrictNum);
+has cover => (is => 'ro', isa => Bool, default => sub { 0 });
 
 sub _build_paper_thickness_in_pt {
     my $self = shift;
@@ -429,18 +440,38 @@ sub _paper_dimensions {
 sub add_cropmarks {
     my $self = shift;
     die "add_cropmarks already called!" if $self->_is_closed;
-    my $page = 1;
-    foreach my $page (1 .. $self->total_output_pages) {
-        print "Importing page $page\n" if DEBUG;
-        $self->_import_page($page);
+    my $needed = $self->total_output_pages - $self->total_input_pages;
+    die "Something is off, pages needed: $needed pages" if $needed < 0;
+    my @sequence = (1 .. $self->total_input_pages);
+    if ($needed) {
+        my $last;
+        if ($self->cover) {
+            $last = pop @sequence;
+        }
+        while ($needed > 0) {
+            push @sequence, undef;
+            $needed--;
+        }
+        if ($last) {
+            push @sequence, $last;
+        }
     }
+    my $as_page_number = 0;
+    print Dumper(\@sequence) if DEBUG;
+    foreach my $src_page_number (@sequence) {
+        $as_page_number++;
+        # and set it as page_number
+        $self->_import_page($src_page_number, $as_page_number);
+    }
+    print "Saving " . $self->out_pdf . "\n" if DEBUG;
     $self->out_pdf_object->saveas($self->out_pdf);
     $self->in_pdf_object->end;
     $self->out_pdf_object->end;
+    print "Objects closed\n" if DEBUG;
     move($self->out_pdf, $self->output)
       or die "Cannot copy " . $self->out_pdf . ' to ' . $self->output;
     $self->_is_closed(1);
-    return $page;
+    return $self->output;
 }
 
 sub _round {
@@ -465,8 +496,8 @@ sub _build_output_dimensions {
 }
 
 sub _import_page {
-    my ($self, $page_number) = @_;
-    my $in_page = $self->in_pdf_object->openpage($page_number);
+    my ($self, $src_page_number, $page_number) = @_;
+    my $in_page = (defined $src_page_number ? $self->in_pdf_object->openpage($src_page_number) : undef);
     my $page = $self->out_pdf_object->page;
     my ($llx, $lly, $urx, $ury) = $page->get_mediabox;
     die "mediabox origins for output pdf should be zero" if $llx + $lly;
@@ -531,7 +562,7 @@ sub _import_page {
     print "Offsets are $offset_x, $offset_y\n" if DEBUG;
     if ($in_page) {
         my $xo = $self->out_pdf_object->importPageIntoForm($self->in_pdf_object,
-                                                           $page_number);
+                                                           $src_page_number);
         my $gfx = $page->gfx;
         $gfx->formimage($xo, $offset_x, $offset_y);
     }

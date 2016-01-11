@@ -11,7 +11,7 @@ use Pod::Usage;
 my $paper = 'a4';
 my ($help, $version);
 my ($no_top, $no_bottom, $no_inner, $no_outer, $oneside) = (0,0,0,0,0);
-my ($font_size, $cropmark_length, $cropmark_offset, $paper_thickness, $signature);
+my ($font_size, $cropmark_length, $cropmark_offset, $paper_thickness, $signature, $cover);
 GetOptions(
            'paper=s' => \$paper,
            'no-top' => \$no_top,
@@ -26,6 +26,7 @@ GetOptions(
            version => \$version,
            'signature=i' => \$signature,
            'paper-thickness=s' => \$paper_thickness,
+           cover => \$cover,
           ) or die;
 
 if ($help) {
@@ -64,6 +65,7 @@ my %args = (
             inner => !$no_inner,
             outer => !$no_outer,
             twoside => !$oneside,
+            cover => $cover,
            );
 
 if ($font_size) {
@@ -167,6 +169,16 @@ This option is active only when the signature is active. Default to
 0.1mm, which is appropriate for the common paper 80g/m2. You can do
 the math measuring a stack height and dividing by the number of
 sheets.
+
+=item --cover
+
+Relevant if signature is passed. Usually the last signature is filled
+with blank pages until it's full. With this option turned on, the last
+page of the document is moved to the end of the stack. If you have 13
+pages, and a signature of 4, you will end up with 16 pages with
+cropmarks, and the last three empty. With this option you will have
+page 16 with the logical page 13 on it, while the pages 13-14-15 will
+be empty (but with cropmarks nevertheless).
 
 =item --help
 

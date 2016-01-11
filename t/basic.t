@@ -3,15 +3,21 @@ use utf8;
 use strict;
 use warnings;
 
-use Test::More tests => 288;
+use Test::More tests => 126;
 use Data::Dumper;
 use PDF::API2;
 use PDF::Cropmarks;
 use File::Spec::Functions qw/catfile catdir/;
+use File::Temp;
 
 my @out;
 
-foreach my $paper ('a4', 'a5', 'a6', '150mm:8in', ' 15cm : 20cm ', 'letter') {
+my $wd = File::Temp->newdir(CLEANUP => !$ENV{AMW_NOCLEANUP});
+
+diag "Output in $wd";
+diag "Set AMW_NOCLEANUP to true to avoid removing it" unless $ENV{AMW_NOCLEANUP};
+
+foreach my $paper ('a4', 'a6', ' 150mm : 8in ') {
     foreach my $args (
                       {
                       },
@@ -65,9 +71,7 @@ foreach my $paper ('a4', 'a5', 'a6', '150mm:8in', ' 15cm : 20cm ', 'letter') {
         my $papername = $paper . join ('-', map { $_ => $args->{$_} }
                                        sort keys %$args);
         $papername =~ s/\W/-/g;
-        my $output = catfile('t', 'test-output-' . $papername . '.pdf');
-        unlink $output if -f $output;
-        ok (! -f $output, "$output doesn't exists");
+        my $output = catfile($wd, 'test-output-' . $papername . '.pdf');
         my $cropper = PDF::Cropmarks->new(input => catfile(qw/t test-input.pdf/),
                                           paper => uc($paper),
                                           output => $output,
@@ -90,13 +94,5 @@ foreach my $paper ('a4', 'a5', 'a6', '150mm:8in', ' 15cm : 20cm ', 'letter') {
 }
 
 
-if ($ENV{AMW_DEBUG}) {
-    diag "Output:\n" . join("\n", @out);
-}
-else {
-    foreach my $file (@out) {
-        unlink $file or die "Cannot remove $file $!";
-    }
-}
-
+diag "Output:\n" . join("\n", @out) if $ENV{AMW_NOCLEANUP};
 

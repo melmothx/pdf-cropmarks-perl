@@ -7,6 +7,7 @@ MANIFEST			This list of files
 README
 t/basic.t
 t/changes.t
+t/cover.t
 t/manifest.t
 t/pod-coverage.t
 t/pod.t
