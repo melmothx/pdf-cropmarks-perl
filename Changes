@@ -1,5 +1,10 @@
 Revision history for perl module PDF::Cropmarks
 
+0.06 2016-01-12
+
+ - Added cover option
+ - Removed redundant/useless tests
+
 0.05 2016-01-08
 
  - Added title option
