@@ -28,4 +28,4 @@
 # Avoid patch remnants
 \.orig$
 \.rej$
-t/test-output.*\.pdf
+t/output/.*

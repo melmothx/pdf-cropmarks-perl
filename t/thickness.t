@@ -2,13 +2,21 @@
 
 use strict;
 use warnings;
-use File::Spec::Functions qw/catfile/;
+use File::Spec::Functions qw/catfile catdir/;
 use PDF::Cropmarks;
 use Data::Dumper;
-use Test::More tests => 12;
+use Test::More tests => 13;
 
 my $input = catfile(qw/t test-input.pdf/);
-my $output = catfile(qw/t test-output-thickness.pdf/);
+my $outdir = catdir(qw/t output/);
+mkdir $outdir unless -d $outdir;
+my $output = catfile(qw/t output thickness.pdf/);
+
+if (-f $output) {
+    unlink $output or die "Cannot remove $output $!";
+}
+
+ok (!-f $output, "No $output found");
 
 {
     my $cropper = PDF::Cropmarks->new(input => $input,
@@ -139,9 +147,6 @@ foreach my $signature (1, 12) {
       or diag Dumper($cropper->thickness_page_offsets) . " vs " . Dumper(\%thicks);
     $cropper->add_cropmarks;
     ok (-f $output, "$output produced");
-    unless ($ENV{AMW_DEBUG}) {
-        unlink $output or die "Cannot remove $output $!";
-    }
 }
 
 sub off_is_deeply {

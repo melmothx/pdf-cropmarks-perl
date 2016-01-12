@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 10;
+use Test::More tests => 12;
 use File::Spec::Functions;
 use PDF::API2;
 use PDF::Cropmarks;
@@ -10,6 +10,8 @@ use File::Temp;
 
 my $missing_pdftotext = system('pdftotext', '-v');
 my $wd = File::Temp->newdir(CLEANUP => !$ENV{AMW_NOCLEANUP});
+my $outdir = catdir(qw/t output/);
+mkdir $outdir unless -d $outdir;
 diag "Using $wd for output";
 
 foreach my $spec ({
@@ -32,7 +34,9 @@ foreach my $spec ({
                   }) {
     my $pdf = create_pdf(catfile($wd, "$spec->{name}-in.pdf"), 14);
     diag "Creating $pdf";
-    my $out = catfile($wd, "$spec->{name}-out.pdf");
+    my $out = catfile($outdir, "$spec->{name}-out.pdf");
+    unlink $out if -f $out;
+    ok (! -f $out, "No $out found");
     ok (-f $pdf, "$pdf is ok");
     my $cropper = PDF::Cropmarks->new(input => $pdf,
                                       output => $out,
@@ -43,10 +47,9 @@ foreach my $spec ({
                                       cover => $spec->{cover});
     ok ($cropper, "Object created");
     $cropper->add_cropmarks;
-    ok (-f $out, "Found the pdf");
+    ok (-f $out, "Found $out");
   SKIP: {
         skip "pdftotext is not available", 1 if $missing_pdftotext;
-        diag "Testing the sequence";
         my $pages_got = extract_pages(extract_pdf($out));
         is_deeply($pages_got, $spec->{sequence},
                   "Sequence correct");

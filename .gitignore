@@ -17,5 +17,5 @@ pm_to_blib
 PDF-Cropmarks-*
 PDF-Cropmarks-*.tar.gz
 *~
-t/test-output*
+t/output/*
 *.bak
