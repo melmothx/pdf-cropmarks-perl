@@ -1,5 +1,9 @@
 Revision history for perl module PDF::Cropmarks
 
+0.07 2016-01-12
+
+ - Fixed memory cycles test which was loading an unneeded module
+
 0.06 2016-01-12
 
  - Added cover option

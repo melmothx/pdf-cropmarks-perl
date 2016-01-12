@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use Test::More;
-use PDF::Imposition;
 use File::Spec::Functions;
 use File::Temp;
 use PDF::Cropmarks;
