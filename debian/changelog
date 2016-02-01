@@ -1,0 +1,11 @@
+libpdf-cropmarks-perl (0.07-2) unstable; urgency=medium
+
+  * Fixed debian files and deps
+
+ -- Marco Pessotto <melmothx@gmail.com>  Mon, 01 Feb 2016 19:57:46 +0100
+
+libpdf-cropmarks-perl (0.07-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Marco Pessotto <melmothx@gmail.com>  Sat, 16 Jan 2016 10:07:10 +0100

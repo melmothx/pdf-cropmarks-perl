@@ -19,3 +19,5 @@ PDF-Cropmarks-*.tar.gz
 *~
 t/output/*
 *.bak
+debian/files
+debian/libpdf-cropmarks-perl*

@@ -1,0 +1,30 @@
+Source: libpdf-cropmarks-perl
+Section: perl
+Priority: optional
+Maintainer: packager <melmothx@gmail.com>
+Build-Depends: debhelper (>= 9)
+Build-Depends-Indep: libcam-pdf-perl (>= 1.58),
+ libmoo-perl,
+ libnamespace-clean-perl,
+ libpdf-api2-perl (>= 2.019),
+ libtype-tiny-perl,
+ poppler-utils,
+ perl
+Standards-Version: 3.9.6
+Homepage: https://metacpan.org/release/PDF-Cropmarks
+
+Package: libpdf-cropmarks-perl
+Architecture: all
+Depends: ${misc:Depends}, ${perl:Depends},
+ libcam-pdf-perl (>= 1.58),
+ libmoo-perl,
+ libnamespace-clean-perl,
+ libpdf-api2-perl (>= 2.019),
+ libtype-tiny-perl
+Description: Add cropmarks to existing PDFs
+ This module prepares PDF for printing adding the cropmarks, usually on
+ a larger physical page, doing the same thing the LaTeX package "crop"
+ does. It also takes care of the paper thickness, shifting the logical
+ pages to compensate the folding.
+ .
+ It comes with a ready-made script, pdf-cropmarks.pl
