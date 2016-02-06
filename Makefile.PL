@@ -19,7 +19,7 @@ WriteMakefile(
                   'CAM::PDF' => 1.58,
                   'PDF::API2' => 2.019,
                   'Moo' => 0,
-                  'Type::Tiny' => 0,
+                  'Type::Tiny' => 1,
                   'namespace::clean' => 0,
                  },
     EXE_FILES => [ 'bin/pdf-cropmarks.pl' ],
