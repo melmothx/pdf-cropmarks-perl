@@ -1,3 +1,9 @@
+libpdf-cropmarks-perl (0.08-1) unstable; urgency=medium
+
+  * New upstream version
+
+ -- Marco Pessotto <melmothx@gmail.com>  Sat, 13 Feb 2016 15:43:56 +0100
+
 libpdf-cropmarks-perl (0.07-2) unstable; urgency=medium
 
   * Fixed debian files and deps

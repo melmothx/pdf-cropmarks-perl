@@ -1,7 +1,7 @@
 Source: libpdf-cropmarks-perl
 Section: perl
 Priority: optional
-Maintainer: packager <melmothx@gmail.com>
+Maintainer: Marco Pessotto <melmothx@gmail.com>
 Build-Depends: debhelper (>= 9)
 Build-Depends-Indep: libcam-pdf-perl (>= 1.58),
  libmoo-perl,

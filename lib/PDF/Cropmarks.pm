@@ -27,11 +27,11 @@ PDF::Cropmarks - Add cropmarks to existing PDFs
 
 =head1 VERSION
 
-Version 0.07
+Version 0.08
 
 =cut
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 =head1 SYNOPSIS
 
@@ -512,33 +512,44 @@ sub _import_page {
 
     # adjust offset if bottom or top are missing. Both missing doesn't
     # make much sense
+    my ($top_middle_mark, $bottom_middle_mark,
+        $left_middle_mark, $right_middle_mark) = (1, 1, 1, 1);
+
     if (!$self->bottom && !$self->top) {
         # warn "bottom and top are both false, centering\n";
     }
     elsif (!$self->bottom) {
         $offset_y = 0;
+        $bottom_middle_mark = 0;
     }
     elsif (!$self->top) {
         $offset_y *= 2;
+        $top_middle_mark = 0;
     }
 
     if (!$self->inner && !$self->outer) {
         # warn "inner and outer are both false, centering\n";
     }
     elsif (!$self->inner) {
+        # even pages
         if ($self->twoside and !($page_number % 2)) {
             $offset_x *= 2;
+            $right_middle_mark = 0;
         }
         else {
             $offset_x = 0;
+            $left_middle_mark = 0;
         }
     }
     elsif (!$self->outer) {
+        # odd pages
         if ($self->twoside and !($page_number % 2)) {
             $offset_x = 0;
+            $left_middle_mark = 0;
         }
         else {
             $offset_x *= 2;
+            $right_middle_mark = 0;
         }
     }
 
@@ -589,6 +600,14 @@ sub _import_page {
                       ($offset_x, $offset_y - $crop_offset),
                       ($offset_x, $offset_y - $crop_offset - $crop_width));
 
+    if ($bottom_middle_mark) {
+        $self->_draw_line($crop,
+                          ($offset_x + ($inurx / 2),
+                           $offset_y - $crop_offset),
+                          ($offset_x + ($inurx / 2),
+                           $offset_y - $crop_offset - ($crop_width / 2)));
+    }
+
     # right bottom corner
     $self->_draw_line($crop,
                       ($offset_x + $inurx + $crop_offset, $offset_y),
@@ -599,6 +618,14 @@ sub _import_page {
                        $offset_y - $crop_offset),
                       ($offset_x + $inurx,
                        $offset_y - $crop_offset - $crop_width));
+
+    if ($right_middle_mark) {
+        $self->_draw_line($crop,
+                          ($offset_x + $inurx + $crop_offset,
+                           $offset_y + ($inury/2)),
+                          ($offset_x + $inurx + $crop_offset + ($crop_width / 2),
+                           $offset_y + ($inury/2)));
+    }
 
     # top right corner
     $self->_draw_line($crop,
@@ -613,6 +640,14 @@ sub _import_page {
                       ($offset_x + $inurx,
                        $offset_y + $inury + $crop_offset + $crop_width));
 
+    if ($top_middle_mark) {
+        $self->_draw_line($crop,
+                          ($offset_x + ($inurx / 2),
+                           $offset_y + $inury + $crop_offset),
+                          ($offset_x + ($inurx / 2),
+                           $offset_y + $inury + $crop_offset + ($crop_width / 2)));
+    }
+
     # top left corner
     $self->_draw_line($crop,
                       ($offset_x, $offset_y + $inury + $crop_offset),
@@ -625,6 +660,13 @@ sub _import_page {
                       ($offset_x - $crop_offset - $crop_width,
                        $offset_y + $inury));
 
+    if ($left_middle_mark) {
+        $self->_draw_line($crop,
+                          ($offset_x - $crop_offset,
+                           $offset_y + ($inury / 2)),
+                          ($offset_x - $crop_offset - ($crop_width / 2),
+                           $offset_y + ($inury / 2)));
+    }
     # and stroke
     $crop->stroke;
 
@@ -670,6 +712,9 @@ sub _import_page {
 
 sub _draw_line {
     my ($self, $gfx, $from_x, $from_y, $to_x, $to_y) = @_;
+    if (DEBUG) {
+        print "Printing line from ($from_x, $from_y) to ($to_x, $to_y)\n";
+    }
     $gfx->move($from_x, $from_y);
     $gfx->line($to_x, $to_y);
     my $radius = 3;
