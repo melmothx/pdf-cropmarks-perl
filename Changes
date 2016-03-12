@@ -1,5 +1,10 @@
 Revision history for perl module PDF::Cropmarks
 
+0.09 2016-03-12
+
+ - Bumped dependency on PDF::API2 with xref support
+ - Removed depedency on CAM::PDF
+
 0.08 2016-02-13
 
  - Added middle marks. Handy if the height or width is the same of the

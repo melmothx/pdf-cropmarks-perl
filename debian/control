@@ -3,9 +3,9 @@ Section: perl
 Priority: optional
 Maintainer: Marco Pessotto <melmothx@gmail.com>
 Build-Depends: debhelper (>= 9)
-Build-Depends-Indep: libcam-pdf-perl (>= 1.58),
- libmoo-perl,
+Build-Depends-Indep: libmoo-perl,
  libnamespace-clean-perl,
+ libpdf-api2-perl (>= 2.027),
  libpdf-api2-perl (>= 2.019),
  libtype-tiny-perl (>= 1),
  poppler-utils,
@@ -16,10 +16,9 @@ Homepage: https://metacpan.org/release/PDF-Cropmarks
 Package: libpdf-cropmarks-perl
 Architecture: all
 Depends: ${misc:Depends}, ${perl:Depends},
- libcam-pdf-perl (>= 1.58),
  libmoo-perl,
  libnamespace-clean-perl,
- libpdf-api2-perl (>= 2.019),
+ libpdf-api2-perl (>= 2.027),
  libtype-tiny-perl (>= 1),
 Description: Add cropmarks to existing PDFs
  This module prepares PDF for printing adding the cropmarks, usually on

@@ -16,8 +16,7 @@ WriteMakefile(
                        'Test::More' => 0,
     },
     PREREQ_PM => {
-                  'CAM::PDF' => 1.58,
-                  'PDF::API2' => 2.019,
+                  'PDF::API2' => 2.027,
                   'Moo' => 0,
                   'Type::Tiny' => 1,
                   'namespace::clean' => 0,

@@ -27,11 +27,11 @@ PDF::Cropmarks - Add cropmarks to existing PDFs
 
 =head1 VERSION
 
-Version 0.08
+Version 0.09
 
 =cut
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 =head1 SYNOPSIS
 
@@ -377,22 +377,11 @@ has in_pdf_object => (is => 'lazy', isa => Object);
 sub _build_in_pdf_object {
     my $self = shift;
     my $input = eval { PDF::API2->open($self->in_pdf) };
-    if (!$input || $@) {
-        warn $@ if DEBUG && $@;
-        # same as in PDF::Imposition::Schema
-        require CAM::PDF;
-        my $src = CAM::PDF->new($self->in_pdf);
-        my $tmpfile_copy = File::Spec->catfile($self->_tmpdir, 'v14.pdf');
-        $src->cleansave();
-        $src->output($tmpfile_copy);
-        undef $src;
-        $input = PDF::API2->open($tmpfile_copy);
-    }
     if ($input) {
         return $input;
     }
     else {
-        die "Cannot open " . $self->in_pdf unless $input;
+        die "Cannot open " . $self->in_pdf . " $@" unless $input;
     }
 }
 
