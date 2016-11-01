@@ -1,5 +1,9 @@
 Revision history for perl module PDF::Cropmarks
 
+0.10 2016-11-01
+
+ - Optimization: load fonts once.
+
 0.09 2016-03-12
 
  - Bumped dependency on PDF::API2 with xref support

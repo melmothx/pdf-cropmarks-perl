@@ -27,11 +27,11 @@ PDF::Cropmarks - Add cropmarks to existing PDFs
 
 =head1 VERSION
 
-Version 0.09
+Version 0.10
 
 =cut
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 =head1 SYNOPSIS
 
@@ -179,7 +179,7 @@ has font_size => (is => 'ro', isa => Str, default => sub { '8pt' });
 has cropmark_length_in_pt => (is => 'lazy', isa => StrictNum);
 has cropmark_offset_in_pt => (is => 'lazy', isa => StrictNum);
 has font_size_in_pt => (is => 'lazy', isa => StrictNum);
-
+has _font_object => (is => 'rw', isa => Maybe[Object]);
 has signature => (is => 'rwp', isa => Int, default => sub { 0 });
 has paper_thickness => (is => 'ro', isa => Str, default => sub { '0.1mm' });
 has paper_thickness_in_pt => (is => 'lazy', isa => StrictNum);
@@ -447,6 +447,7 @@ sub add_cropmarks {
     }
     my $as_page_number = 0;
     print Dumper(\@sequence) if DEBUG;
+    $self->_font_object($self->out_pdf_object->corefont('Courier'));
     foreach my $src_page_number (@sequence) {
         $as_page_number++;
         # and set it as page_number
@@ -454,12 +455,11 @@ sub add_cropmarks {
     }
     print "Saving " . $self->out_pdf . "\n" if DEBUG;
     $self->out_pdf_object->saveas($self->out_pdf);
-    $self->in_pdf_object->end;
-    $self->out_pdf_object->end;
-    print "Objects closed\n" if DEBUG;
+    $self->_cleanup;
+
     move($self->out_pdf, $self->output)
       or die "Cannot copy " . $self->out_pdf . ' to ' . $self->output;
-    $self->_is_closed(1);
+
     return $self->output;
 }
 
@@ -662,7 +662,7 @@ sub _import_page {
     # then add the text
     my $text = $page->text;
     my $marker = sprintf('Pg %.4d', $page_number);
-    $text->font($self->out_pdf_object->corefont('Courier'),
+    $text->font($self->_font_object,
                 $self->_round($self->font_size_in_pt));
     $text->fillcolor('black');
 
@@ -714,12 +714,23 @@ sub _draw_line {
     $gfx->line($to_x, $to_y + $radius);
 }
 
-sub DESTROY {
+sub _cleanup {
     my $self = shift;
-    unless ($self->_is_closed) {
+    if ($self->_is_closed) {
+        return;
+    }
+    else {
+        $self->_font_object(undef);
         $self->in_pdf_object->end;
         $self->out_pdf_object->end;
+        $self->_is_closed(1);
+        print "Objects closed\n" if DEBUG;
     }
+}
+
+sub DESTROY {
+    my $self = shift;
+    $self->_cleanup;
 }
 
 =head1 AUTHOR
