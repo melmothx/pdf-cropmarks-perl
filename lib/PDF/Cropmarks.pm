@@ -391,11 +391,12 @@ sub _build_out_pdf_object {
     my $self = shift;
     my $pdf = PDF::API2->new;
     my $now = POSIX::strftime(q{%Y%m%d%H%M%S+00'00'}, localtime(time()));
-    $pdf->info(Creator => 'PDF::Cropmarks',
-               Producer => 'PDF::API2',
-               Title => $self->title || $self->basename,
-               CreationDate => $now,
-               ModDate => $now);
+
+    my %info = ($self->in_pdf_object->info,
+                Creator => "PDF::Cropmarks $VERSION",
+                CreationDate => POSIX::strftime(q{%Y%m%d%H%M%S+00'00'}, localtime((stat($self->in_pdf))[9])),
+                ModDate => POSIX::strftime(q{%Y%m%d%H%M%S+00'00'}, localtime(time())));
+    $pdf->info(%info);
     $pdf->mediabox($self->_paper_dimensions);
     return $pdf;
 }

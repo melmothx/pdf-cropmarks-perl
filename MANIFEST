@@ -10,6 +10,7 @@ t/changes.t
 t/cover.t
 t/manifest.t
 t/memory-cycles.t
+t/metadata.t
 t/pod-coverage.t
 t/pod.t
 t/test-input.pdf
