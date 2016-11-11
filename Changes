@@ -1,5 +1,9 @@
 Revision history for perl module PDF::Cropmarks
 
+0.11 2016-11-11
+
+ - Carry on metadata from input to output
+
 0.10 2016-11-01
 
  - Optimization: load fonts once.
